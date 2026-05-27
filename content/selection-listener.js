@@ -6,6 +6,8 @@
   let hoveredHtmlTarget = null;
   let annotatedTarget = null;
   let annotatedOriginalHtml = '';
+  let htmlSourceText = '';
+  let latestAnnotationToken = 0;
 
   function isEnglishDominant(text) {
     const letters = (text.match(/[A-Za-z]/g) || []).length;
@@ -99,6 +101,13 @@
     }
     annotatedTarget = null;
     annotatedOriginalHtml = '';
+    latestAnnotationToken += 1;
+  }
+
+  function restoreOriginalContent() {
+    restoreAnnotatedTarget();
+    activeHtmlTarget = null;
+    htmlSourceText = '';
   }
 
   function escapeHtml(value) {
@@ -110,18 +119,56 @@
       .replaceAll("'", '&#39;');
   }
 
+  function splitTokensPreservingSpace(text) {
+    return text.split(/(\s+)/).filter(Boolean);
+  }
+
+  function glossaryMap(glossary = []) {
+    return Object.fromEntries(glossary.map(item => [String(item.term || '').toLowerCase(), item.meaning || '뜻 메모 필요']));
+  }
+
+  function renderWordSpans(text, glossary = {}) {
+    return splitTokensPreservingSpace(text).map(token => {
+      if (/^\s+$/.test(token)) return token;
+      const normalized = token.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '').toLowerCase();
+      const tooltip = glossary[normalized] || token;
+      return `<span class="rfc-inline-word" data-tooltip="${escapeHtml(tooltip)}" data-word="${escapeHtml(normalized || token.toLowerCase())}">${escapeHtml(token)}</span>`;
+    }).join('');
+  }
+
+  async function hydrateAnnotationTooltips(analysis, tokenId) {
+    if (!annotatedTarget || !annotatedTarget.isConnected) return;
+    const segmentNodes = [...annotatedTarget.querySelectorAll('.rfc-inline-segment[data-segment-index]')];
+    const wordNodes = [...annotatedTarget.querySelectorAll('.rfc-inline-word[data-word]')];
+    await Promise.all(segmentNodes.map(async (node) => {
+      const text = node.dataset.segmentText || '';
+      if (!text) return;
+      const translation = await requestTranslation(text);
+      if (latestAnnotationToken !== tokenId || !node.isConnected) return;
+      node.dataset.tooltip = translation;
+    }));
+    const uniqueWords = [...new Set(wordNodes.map(node => node.dataset.word).filter(word => /^[a-z][a-z'-]{2,}$/.test(word)).slice(0, 20))];
+    const wordTranslations = await Promise.all(uniqueWords.map(async (word) => [word, await requestTranslation(word)]));
+    const wordMap = Object.fromEntries(wordTranslations);
+    if (latestAnnotationToken !== tokenId || !annotatedTarget?.isConnected) return;
+    wordNodes.forEach(node => {
+      const translated = wordMap[node.dataset.word];
+      if (translated) node.dataset.tooltip = translated;
+    });
+  }
+
   function renderInlineAnnotation(analysis) {
     if (lastAnalysisSource !== 'html' || !activeHtmlTarget || !activeHtmlTarget.isConnected) {
       restoreAnnotatedTarget();
       return;
     }
 
-    if (!['flow', 'chunk', 'structure'].includes(analysis.mode)) {
+    if (!['flow', 'chunk', 'structure', 'simplify', 'compare'].includes(analysis.mode)) {
       restoreAnnotatedTarget();
       return;
     }
 
-    const text = currentSelection?.text || analysis.sourceText || '';
+    const text = htmlSourceText || currentSelection?.text || analysis.sourceText || '';
     if (!text) return;
 
     if (annotatedTarget !== activeHtmlTarget) {
@@ -131,25 +178,46 @@
     }
 
     const segments = analysis.segments || [];
+    const glossary = glossaryMap(analysis.glossary || []);
     let bodyHtml = '';
 
     if (analysis.mode === 'structure') {
-      bodyHtml = segments.map(segment => `
-        <span class="rfc-inline-segment rfc-inline-${segment.role || 'support'}">
+      bodyHtml = segments.map((segment, index) => `
+        <span class="rfc-inline-segment rfc-inline-${segment.role || 'support'}" data-tooltip="번역 불러오는 중..." data-segment-index="${index}" data-segment-text="${escapeHtml(segment.text)}">
           <span class="rfc-inline-label">${escapeHtml(segment.role === 'core' ? 'Core' : segment.role === 'modifier' ? 'Modifier' : segment.role === 'clause' ? 'Clause' : 'Support')}</span>
-          <span class="rfc-inline-text">${escapeHtml(segment.text)}</span>
+          <span class="rfc-inline-text">${renderWordSpans(segment.text, glossary)}</span>
         </span>
       `).join(' ');
+    } else if (analysis.mode === 'compare') {
+      bodyHtml = `
+        <span class="rfc-inline-segment rfc-inline-support" data-tooltip="${escapeHtml(analysis.modePayload?.compare?.original || text)}">
+          <span class="rfc-inline-label">Original</span>
+          <span class="rfc-inline-text">${renderWordSpans(analysis.modePayload?.compare?.original || text, glossary)}</span>
+        </span>
+        <span class="rfc-inline-segment rfc-inline-core" data-tooltip="${escapeHtml(analysis.modePayload?.compare?.corrected || text)}">
+          <span class="rfc-inline-label">Compare</span>
+          <span class="rfc-inline-text">${renderWordSpans(analysis.modePayload?.compare?.corrected || text, glossary)}</span>
+        </span>
+      `;
+    } else if (analysis.mode === 'simplify') {
+      bodyHtml = `
+        <span class="rfc-inline-segment rfc-inline-core" data-tooltip="${escapeHtml(analysis.modePayload?.text || text)}">
+          <span class="rfc-inline-label">Simple</span>
+          <span class="rfc-inline-text">${renderWordSpans(analysis.modePayload?.text || text, glossary)}</span>
+        </span>
+      `;
     } else {
       bodyHtml = (analysis.chunks || []).map((chunk, index) => `
-        <span class="rfc-inline-segment rfc-inline-${segments[index]?.role || 'support'}">
-          <span class="rfc-inline-text">${escapeHtml(chunk)}</span>
+        <span class="rfc-inline-segment rfc-inline-${segments[index]?.role || 'support'}" data-tooltip="번역 불러오는 중..." data-segment-index="${index}" data-segment-text="${escapeHtml(chunk)}">
+          <span class="rfc-inline-text">${renderWordSpans(chunk, glossary)}</span>
         </span>
       `).join(' ');
     }
 
     activeHtmlTarget.innerHTML = `<span class="rfc-inline-annotation rfc-inline-mode-${analysis.mode}">${bodyHtml}</span>`;
     activeHtmlTarget.classList.add('rfc-annotated-target');
+    const tokenId = ++latestAnnotationToken;
+    hydrateAnnotationTooltips(analysis, tokenId);
   }
 
   async function hydrateTranslation(text, apply) {
@@ -203,6 +271,7 @@
     const text = (inspectable.innerText || inspectable.textContent || '').trim();
     const rect = inspectable.getBoundingClientRect();
     activeHtmlTarget = inspectable;
+    htmlSourceText = text;
     lastAnalysisSource = 'html';
     currentSelection = { text, rect };
     inspectable.classList.remove('rfc-inspect-highlight');
@@ -266,7 +335,6 @@
       exitInspectMode();
       window.ReadingFlowRenderer.clearOverlay();
       window.ReadingFlowRenderer.clearToolbar();
-      restoreAnnotatedTarget();
     }
   });
 
@@ -277,11 +345,15 @@
     if (!currentSelection?.text) return;
     if (event.detail?.source === 'html' && activeHtmlTarget) {
       currentSelection = {
-        text: (activeHtmlTarget.innerText || activeHtmlTarget.textContent || '').trim(),
+        text: htmlSourceText || currentSelection.text,
         rect: activeHtmlTarget.getBoundingClientRect()
       };
     }
     showAnalysis(mode);
+  });
+
+  window.addEventListener('rfc:restore-original-content', () => {
+    restoreOriginalContent();
   });
 
   chrome.runtime.onMessage.addListener((message) => {

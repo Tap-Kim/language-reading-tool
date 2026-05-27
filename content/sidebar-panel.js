@@ -37,21 +37,12 @@
     await chrome.storage.local.set({ [UI_KEY]: next });
   }
 
-  function trapWheelScroll(scrollNode) {
-    if (!scrollNode || scrollNode.dataset.rfcWheelBound === 'true') return;
-    scrollNode.dataset.rfcWheelBound = 'true';
-    scrollNode.addEventListener('wheel', (event) => {
-      const { scrollTop, scrollHeight, clientHeight } = scrollNode;
-      const delta = event.deltaY;
-      const canScrollDown = scrollTop + clientHeight < scrollHeight - 1;
-      const canScrollUp = scrollTop > 0;
-      if ((delta > 0 && canScrollDown) || (delta < 0 && canScrollUp)) {
-        event.stopPropagation();
-      } else {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }, { passive: false });
+  function bindScrollable(node) {
+    if (!node || node.dataset.rfcScrollBound === 'true') return;
+    node.dataset.rfcScrollBound = 'true';
+    node.addEventListener('wheel', (event) => {
+      event.stopPropagation();
+    }, { passive: true });
   }
 
   function ensurePanel() {
@@ -92,8 +83,9 @@
     `;
 
     document.documentElement.appendChild(panel);
-    trapWheelScroll(panel.querySelector('.rfc-sidebar-shell'));
-    trapWheelScroll(panel.querySelector('.rfc-sidebar-list'));
+    bindScrollable(panel.querySelector('.rfc-analysis-panel'));
+    bindScrollable(panel.querySelector('.rfc-analysis-source'));
+    bindScrollable(panel.querySelector('.rfc-sidebar-list'));
 
     panel.querySelector('[data-role="toggle-sidebar"]').addEventListener('click', async () => {
       panel.classList.toggle('is-collapsed');
@@ -123,6 +115,19 @@
         panel.querySelectorAll('[data-role="filter"]').forEach(node => node.classList.toggle('is-active', node === button));
         refresh();
       });
+    });
+
+    panel.querySelector('[data-role="analysis-panel"]').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      if (button.dataset.role === 'analysis-mode') {
+        window.dispatchEvent(new CustomEvent('rfc:mode-change', {
+          detail: { mode: button.dataset.mode, source: button.dataset.source || 'selection', target: 'sidebar' }
+        }));
+      }
+      if (button.dataset.role === 'restore-original') {
+        window.dispatchEvent(new CustomEvent('rfc:restore-original-content'));
+      }
     });
 
     return panel;
@@ -225,9 +230,13 @@
   function renderActiveAnalysis(analysis, meta = {}) {
     const panel = ensurePanel();
     const box = panel.querySelector('[data-role="analysis-panel"]');
+    bindScrollable(box);
     const modes = (analysis?.supportedModes || ['flow', 'chunk', 'structure', 'simplify', 'compare'])
-      .map(mode => `<button type="button" class="rfc-analysis-tab ${mode === analysis.mode ? 'is-active' : ''}" data-role="analysis-mode" data-mode="${mode}">${MODE_LABELS[mode]}</button>`)
+      .map(mode => `<button type="button" class="rfc-analysis-tab ${mode === analysis.mode ? 'is-active' : ''}" data-role="analysis-mode" data-source="${escapeHtml(meta.source || 'selection')}" data-mode="${mode}">${MODE_LABELS[mode]}</button>`)
       .join('');
+    const restoreButton = meta.source === 'html'
+      ? '<button type="button" class="rfc-analysis-restore" data-role="restore-original">원본 복원</button>'
+      : '';
 
     box.innerHTML = `
       <div class="rfc-analysis-header">
@@ -235,6 +244,7 @@
           <strong>선택 영역 분석</strong>
           <p>${escapeHtml(meta.label || '클릭한 영역의 교정 결과')}</p>
         </div>
+        ${restoreButton}
       </div>
       <div class="rfc-analysis-source">${escapeHtml(meta.sourceText || analysis?.sourceText || '')}</div>
       <div class="rfc-analysis-tabs">${modes}</div>
@@ -248,14 +258,6 @@
         </div>
       </div>
     `;
-
-    box.querySelectorAll('[data-role="analysis-mode"]').forEach(button => {
-      button.addEventListener('click', () => {
-        window.dispatchEvent(new CustomEvent('rfc:mode-change', {
-          detail: { mode: button.dataset.mode, source: meta.source || 'selection', target: 'sidebar' }
-        }));
-      });
-    });
   }
 
   function updateActiveTranslation(translation) {

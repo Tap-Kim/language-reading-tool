@@ -623,3 +623,106 @@ body.rfc-inspect-cursor * {
   padding: 8px 10px;
 }
 
+
+
+#rfc-sidebar-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  overscroll-behavior: contain;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#rfc-sidebar-panel .rfc-analysis-panel {
+  flex: 0 0 auto;
+  max-height: 42vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-controls {
+  flex: 0 0 auto;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#rfc-sidebar-panel .rfc-analysis-source {
+  max-height: 120px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rfc-analysis-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rfc-analysis-restore {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rfc-inline-segment,
+.rfc-inline-word {
+  position: relative;
+}
+
+.rfc-inline-segment[data-tooltip]:hover::after,
+.rfc-inline-word[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 80px;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  z-index: 2147483647;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+}
+
+.rfc-inline-segment[data-tooltip]:hover::before,
+.rfc-inline-word[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(15, 23, 42, 0.96) transparent transparent transparent;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+.rfc-inline-word {
+  display: inline;
+  cursor: help;
+}
+
