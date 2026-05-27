@@ -1,12 +1,5 @@
 (() => {
   const ROOT_ID = 'rfc-root';
-  const MODE_LABELS = {
-    flow: '흐름 교정',
-    chunk: '의미 덩어리',
-    structure: '구조 강조',
-    simplify: '간소화 보기',
-    compare: '원문 비교'
-  };
 
   function ensureRoot() {
     let root = document.getElementById(ROOT_ID);
@@ -33,83 +26,27 @@
     return button;
   }
 
+  function clearToolbar() {
+    const toolbar = ensureRoot().querySelector('.rfc-toolbar');
+    if (toolbar) toolbar.remove();
+  }
+
   function clearOverlay() {
     const root = ensureRoot();
-    const overlay = root.querySelector('.rfc-overlay');
-    if (overlay) overlay.remove();
+    root.querySelector('.rfc-overlay')?.remove();
+    root.querySelector('.rfc-selection-popover')?.remove();
   }
 
   function clearInspectorHint() {
-    const root = ensureRoot();
-    const hint = root.querySelector('.rfc-inspector-hint');
-    if (hint) hint.remove();
+    ensureRoot().querySelector('.rfc-inspector-hint')?.remove();
   }
 
   function renderInspectorHint() {
     clearInspectorHint();
-    const root = ensureRoot();
     const hint = document.createElement('div');
     hint.className = 'rfc-inspector-hint';
-    hint.innerHTML = '<strong>영역 분석 모드</strong><span>본문의 HTML 영역을 클릭하면 5가지 교정 기능을 적용합니다.</span>';
-    root.appendChild(hint);
-  }
-
-  function renderModeContent(analysis) {
-    const payload = analysis.modePayload || {};
-    if (payload.contentType === 'lines') {
-      return `<div class="rfc-lines">${(payload.lines || []).map(line => `<div class="rfc-line"><span>${escapeHtml(line.label)}</span><p>${escapeHtml(line.text)}</p></div>`).join('')}</div>`;
-    }
-    if (payload.contentType === 'text') {
-      return `<div class="rfc-simple">${escapeHtml(payload.text || '')}</div>`;
-    }
-    if (payload.contentType === 'compare') {
-      return `<div class="rfc-compare-grid"><div><strong>원문</strong><p>${escapeHtml(payload.compare?.original || '')}</p></div><div><strong>교정형</strong><p>${escapeHtml(payload.compare?.corrected || '')}</p></div></div>`;
-    }
-    return `<div class="rfc-chip-row">${(payload.chips || analysis.chunks || []).map((chunk, idx) => `<span class="rfc-chip rfc-chip-${analysis.segments[idx]?.role || 'support'}">${escapeHtml(chunk)}</span>`).join('')}</div>`;
-  }
-
-  function renderOverlay(rect, analysis, meta = {}) {
-    clearOverlay();
-    clearInspectorHint();
-    const root = ensureRoot();
-    const overlay = document.createElement('div');
-    overlay.className = 'rfc-overlay';
-    overlay.style.top = `${window.scrollY + rect.bottom + 10}px`;
-    overlay.style.left = `${Math.max(16, window.scrollX + rect.left)}px`;
-
-    const modes = analysis.supportedModes || ['flow', 'chunk', 'structure', 'simplify', 'compare'];
-    const tabs = modes.map(mode => `<button class="rfc-mode-tab ${mode === analysis.mode ? 'is-active' : ''}" data-mode="${mode}" type="button">${MODE_LABELS[mode]}</button>`).join('');
-
-    overlay.innerHTML = `
-      <div class="rfc-card">
-        <div class="rfc-card-header">
-          <div>
-            <strong>${escapeHtml(analysis.modePayload?.title || 'Reading Flow')}</strong>
-            <p class="rfc-summary">${escapeHtml(analysis.modePayload?.summary || '')}</p>
-          </div>
-          <button class="rfc-close" type="button" aria-label="Close overlay">×</button>
-        </div>
-        <div class="rfc-mode-tabs">${tabs}</div>
-        ${renderModeContent(analysis)}
-        <p class="rfc-translation">${escapeHtml(analysis.translation || '')}</p>
-        <ul class="rfc-tips">${(analysis.tips || []).map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>
-      </div>
-    `;
-
-    overlay.querySelector('.rfc-close').addEventListener('click', clearOverlay);
-    overlay.querySelectorAll('[data-mode]').forEach(button => {
-      button.addEventListener('click', () => {
-        window.dispatchEvent(new CustomEvent('rfc:mode-change', { detail: { mode: button.dataset.mode, source: meta.source || 'selection' } }));
-      });
-    });
-
-    root.appendChild(overlay);
-  }
-
-  function updateOverlayTranslation(translation) {
-    const root = ensureRoot();
-    const node = root.querySelector('.rfc-overlay .rfc-translation');
-    if (node) node.textContent = translation || '';
+    hint.innerHTML = '<strong>영역 분석 모드</strong><span>본문의 HTML 영역을 클릭하면 교정 결과를 우측 패널과 원문에 함께 표시합니다.</span>';
+    ensureRoot().appendChild(hint);
   }
 
   function renderToolbar(rect) {
@@ -127,9 +64,59 @@
       `;
       root.appendChild(toolbar);
     }
-    toolbar.style.top = `${window.scrollY + rect.top - 46}px`;
+    toolbar.style.top = `${window.scrollY + rect.top - 52}px`;
     toolbar.style.left = `${Math.max(16, window.scrollX + rect.left)}px`;
     return toolbar;
+  }
+
+  function renderSelectionPopover(rect, payload) {
+    const root = ensureRoot();
+    root.querySelector('.rfc-selection-popover')?.remove();
+    const popover = document.createElement('div');
+    popover.className = 'rfc-selection-popover';
+    popover.style.top = `${window.scrollY + rect.bottom + 12}px`;
+    popover.style.left = `${Math.max(16, window.scrollX + rect.left)}px`;
+    popover.innerHTML = `
+      <div class="rfc-popover-card">
+        <div class="rfc-popover-header">
+          <strong>빠른 메모</strong>
+          <button type="button" class="rfc-popover-close" aria-label="Close popover">×</button>
+        </div>
+        <div class="rfc-popover-source">${escapeHtml(payload.sourceText || '')}</div>
+        <div class="rfc-popover-translation">
+          <label>번역</label>
+          <p data-role="quick-translation">${escapeHtml(payload.translation || '번역 불러오는 중...')}</p>
+        </div>
+        <label class="rfc-popover-label" for="rfc-popover-note">메모</label>
+        <textarea id="rfc-popover-note" class="rfc-popover-note" rows="4" placeholder="이 표현을 어떻게 기억할지 적어보세요."></textarea>
+        <div class="rfc-popover-actions">
+          <button type="button" data-role="save-quick-note">메모 저장</button>
+          <button type="button" data-role="close-quick-note">닫기</button>
+        </div>
+      </div>
+    `;
+
+    popover.querySelector('.rfc-popover-close').addEventListener('click', () => popover.remove());
+    popover.querySelector('[data-role="close-quick-note"]').addEventListener('click', () => popover.remove());
+    popover.querySelector('[data-role="save-quick-note"]').addEventListener('click', () => {
+      const note = popover.querySelector('.rfc-popover-note').value.trim();
+      const translation = popover.querySelector('[data-role="quick-translation"]').textContent.trim();
+      window.dispatchEvent(new CustomEvent('rfc:save-quick-memo', {
+        detail: {
+          text: payload.sourceText || '',
+          translation,
+          note
+        }
+      }));
+      popover.remove();
+    });
+
+    root.appendChild(popover);
+  }
+
+  function updateSelectionPopoverTranslation(translation) {
+    const node = ensureRoot().querySelector('[data-role="quick-translation"]');
+    if (node) node.textContent = translation || '';
   }
 
   function escapeHtml(value) {
@@ -142,15 +129,11 @@
     ensureRoot,
     ensureFloatingButton,
     renderToolbar,
-    renderOverlay,
+    clearToolbar,
+    clearOverlay,
     renderInspectorHint,
     clearInspectorHint,
-    updateOverlayTranslation,
-    clearOverlay,
-    clearToolbar() {
-      const root = ensureRoot();
-      const toolbar = root.querySelector('.rfc-toolbar');
-      if (toolbar) toolbar.remove();
-    }
+    renderSelectionPopover,
+    updateSelectionPopoverTranslation
   };
 })();

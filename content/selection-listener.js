@@ -8,6 +8,7 @@
   let annotatedOriginalHtml = '';
   let htmlSourceText = '';
   let latestAnnotationToken = 0;
+  let quickMemoSelection = null;
 
   function isEnglishDominant(text) {
     const letters = (text.match(/[A-Za-z]/g) || []).length;
@@ -60,15 +61,15 @@
     }
   }
 
-  function buildMemoItem(text, analysis) {
+  function buildMemoItem(text, analysis, note = '', translationOverride = '') {
     const normalized = text.trim();
     const wordLike = normalized.split(/\s+/).length <= 3;
     return {
       id: crypto.randomUUID(),
       type: wordLike ? 'word' : 'sentence',
       sourceText: normalized,
-      translation: analysis.translation,
-      note: '',
+      translation: translationOverride || analysis.translation,
+      note,
       context: '',
       glossary: analysis.glossary || [],
       url: location.href,
@@ -80,9 +81,10 @@
     };
   }
 
-  function analyze(mode = 'flow') {
-    if (!currentSelection?.text) return null;
-    return window.ReadingFlowChunker.analyze(currentSelection.text, mode);
+  function analyze(mode = 'flow', textOverride = '') {
+    const targetText = textOverride || currentSelection?.text;
+    if (!targetText) return null;
+    return window.ReadingFlowChunker.analyze(targetText, mode);
   }
 
   function renderAnalysisInSidebar(analysis) {
@@ -147,7 +149,7 @@
       if (latestAnnotationToken !== tokenId || !node.isConnected) return;
       node.dataset.tooltip = translation;
     }));
-    const uniqueWords = [...new Set(wordNodes.map(node => node.dataset.word).filter(word => /^[a-z][a-z'-]{2,}$/.test(word)).slice(0, 20))];
+    const uniqueWords = [...new Set(wordNodes.map(node => node.dataset.word).filter(word => /^[a-z][a-z'-]{2,}$/.test(word)).slice(0, 24))];
     const wordTranslations = await Promise.all(uniqueWords.map(async (word) => [word, await requestTranslation(word)]));
     const wordMap = Object.fromEntries(wordTranslations);
     if (latestAnnotationToken !== tokenId || !annotatedTarget?.isConnected) return;
@@ -159,11 +161,6 @@
 
   function renderInlineAnnotation(analysis) {
     if (lastAnalysisSource !== 'html' || !activeHtmlTarget || !activeHtmlTarget.isConnected) {
-      restoreAnnotatedTarget();
-      return;
-    }
-
-    if (!['flow', 'chunk', 'structure', 'simplify', 'compare'].includes(analysis.mode)) {
       restoreAnnotatedTarget();
       return;
     }
@@ -226,12 +223,14 @@
   }
 
   function showAnalysis(mode = 'flow') {
-    const analysis = analyze(mode);
+    const baseText = lastAnalysisSource === 'html' ? (htmlSourceText || currentSelection?.text || '') : (currentSelection?.text || '');
+    const analysis = analyze(mode, baseText);
     if (!analysis) return;
+    if (currentSelection) currentSelection.text = baseText;
     renderAnalysisInSidebar(analysis);
     renderInlineAnnotation(analysis);
-    if ((currentSelection?.text || '').split(/\s+/).length > 3) {
-      hydrateTranslation(currentSelection.text, (translation) => {
+    if ((baseText || '').split(/\s+/).length > 3) {
+      hydrateTranslation(baseText, (translation) => {
         analysis.translation = translation;
         window.ReadingFlowSidebar.updateActiveTranslation(translation);
       });
@@ -240,7 +239,7 @@
 
   async function saveSelectionToMemo() {
     if (!currentSelection?.text) return;
-    const analysis = analyze('flow');
+    const analysis = analyze('flow', currentSelection.text);
     if ((currentSelection.text || '').split(/\s+/).length > 3) {
       analysis.translation = await requestTranslation(currentSelection.text);
     }
@@ -248,6 +247,28 @@
     await window.ReadingFlowSidebar.addMemoItem(item);
     renderAnalysisInSidebar(analysis);
     renderInlineAnnotation(analysis);
+  }
+
+  function openQuickMemoPopover(rect, text, translation = '번역 불러오는 중...') {
+    quickMemoSelection = { text, rect, translation };
+    window.ReadingFlowRenderer.renderSelectionPopover(rect, { sourceText: text, translation });
+    if (translation === '번역 불러오는 중...') {
+      hydrateTranslation(text, (translated) => {
+        if (!quickMemoSelection || quickMemoSelection.text !== text) return;
+        quickMemoSelection.translation = translated;
+        window.ReadingFlowRenderer.updateSelectionPopoverTranslation(translated);
+      });
+    }
+  }
+
+  async function saveQuickMemo(detail) {
+    const text = (detail?.text || '').trim();
+    if (!text) return;
+    const analysis = analyze('flow', text);
+    const translation = detail?.translation || await requestTranslation(text);
+    const item = buildMemoItem(text, analysis, detail?.note || '', translation);
+    await window.ReadingFlowSidebar.addMemoItem(item);
+    window.ReadingFlowSidebar.openPanel();
   }
 
   function enterInspectMode() {
@@ -314,6 +335,32 @@
 
   document.addEventListener('mouseup', () => setTimeout(handleSelection, 10));
 
+  document.addEventListener('dblclick', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || isIgnoredElement(target)) return;
+    setTimeout(() => {
+      const selectedText = getSelectionText();
+      const selectionRect = getSelectionRect();
+      const inlineWord = target.closest('.rfc-inline-word');
+      const inlineSegment = target.closest('.rfc-inline-segment');
+      if (inlineWord) {
+        const text = inlineWord.textContent.trim();
+        const rect = inlineWord.getBoundingClientRect();
+        openQuickMemoPopover(rect, text, inlineWord.dataset.tooltip || '번역 불러오는 중...');
+        return;
+      }
+      if (inlineSegment) {
+        const text = (inlineSegment.dataset.segmentText || inlineSegment.textContent || '').trim();
+        const rect = inlineSegment.getBoundingClientRect();
+        openQuickMemoPopover(rect, text, inlineSegment.dataset.tooltip || '번역 불러오는 중...');
+        return;
+      }
+      if (selectedText && selectionRect && isEnglishDominant(selectedText)) {
+        openQuickMemoPopover(selectionRect, selectedText);
+      }
+    }, 20);
+  }, true);
+
   document.addEventListener('mousemove', (event) => {
     if (!inspectMode) return;
     const target = getInspectableTarget(event.target);
@@ -342,10 +389,10 @@
 
   window.addEventListener('rfc:mode-change', (event) => {
     const mode = event.detail?.mode || 'flow';
-    if (!currentSelection?.text) return;
+    if (!currentSelection?.text && !htmlSourceText) return;
     if (event.detail?.source === 'html' && activeHtmlTarget) {
       currentSelection = {
-        text: htmlSourceText || currentSelection.text,
+        text: htmlSourceText || currentSelection?.text || '',
         rect: activeHtmlTarget.getBoundingClientRect()
       };
     }
@@ -354,6 +401,10 @@
 
   window.addEventListener('rfc:restore-original-content', () => {
     restoreOriginalContent();
+  });
+
+  window.addEventListener('rfc:save-quick-memo', (event) => {
+    saveQuickMemo(event.detail || {});
   });
 
   chrome.runtime.onMessage.addListener((message) => {

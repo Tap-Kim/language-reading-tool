@@ -45,6 +45,14 @@
     }, { passive: true });
   }
 
+  function iconChevronUp() {
+    return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 12l5-5 5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  function iconChevronDown() {
+    return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
   function ensurePanel() {
     let panel = document.getElementById(PANEL_ID);
     if (panel) return panel;
@@ -63,8 +71,8 @@
             <p class="rfc-sidebar-subtitle">단어와 문장 해석을 저장하고 다시 봅니다.</p>
           </div>
           <div class="rfc-sidebar-actions">
-            <button type="button" data-role="collapse-all">접기</button>
-            <button type="button" data-role="expand-all">펼치기</button>
+            <button type="button" class="rfc-icon-button" data-role="collapse-all" aria-label="모두 접기" title="모두 접기">${iconChevronUp()}</button>
+            <button type="button" class="rfc-icon-button" data-role="expand-all" aria-label="모두 펼치기" title="모두 펼치기">${iconChevronDown()}</button>
           </div>
         </header>
         <section class="rfc-analysis-panel" data-role="analysis-panel">
@@ -83,8 +91,8 @@
     `;
 
     document.documentElement.appendChild(panel);
+    bindScrollable(panel.querySelector('.rfc-sidebar-shell'));
     bindScrollable(panel.querySelector('.rfc-analysis-panel'));
-    bindScrollable(panel.querySelector('.rfc-analysis-source'));
     bindScrollable(panel.querySelector('.rfc-sidebar-list'));
 
     panel.querySelector('[data-role="toggle-sidebar"]').addEventListener('click', async () => {
