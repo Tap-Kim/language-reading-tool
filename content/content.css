@@ -91,7 +91,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 360px;
+  width: 380px;
   height: 100vh;
   z-index: 2147483645;
   display: flex;
@@ -128,19 +128,55 @@
 
 .rfc-sidebar-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   padding: 16px;
   border-bottom: 1px solid rgba(17, 24, 39, 0.08);
 }
 
-.rfc-sidebar-actions {
-  display: flex;
-  gap: 8px;
+.rfc-sidebar-subtitle {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 12px;
 }
 
-.rfc-sidebar-actions button {
+.rfc-sidebar-actions,
+.rfc-filter-group,
+.rfc-memo-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rfc-sidebar-actions button,
+.rfc-filter-group button,
+.rfc-memo-actions button {
   background: #e2e8f0;
+}
+
+.rfc-filter-group .is-active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.rfc-sidebar-controls {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  display: grid;
+  gap: 10px;
+}
+
+.rfc-search,
+.rfc-field-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  background: #fff;
+  color: #0f172a;
+  box-sizing: border-box;
 }
 
 .rfc-sidebar-list {
@@ -175,11 +211,23 @@
   background: #fff;
 }
 
+.rfc-memo-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .rfc-memo-type {
   color: #2563eb;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.rfc-memo-count {
+  color: #64748b;
+  font-size: 11px;
 }
 
 .rfc-memo-text {
@@ -199,17 +247,44 @@
   display: none;
 }
 
-.rfc-memo-actions {
-  display: flex;
-  gap: 8px;
+.rfc-field-label {
+  display: block;
+  margin: 10px 0 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.rfc-memo-actions button {
-  background: #e2e8f0;
+.rfc-glossary {
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.rfc-glossary strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.rfc-glossary ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.rfc-glossary li {
+  margin: 4px 0;
+}
+
+.rfc-glossary em {
+  display: block;
+  font-style: normal;
+  color: #64748b;
 }
 
 @media (max-width: 900px) {
   .rfc-sidebar {
-    width: min(92vw, 360px);
+    width: min(92vw, 380px);
   }
 }

@@ -26,6 +26,7 @@
       translation: analysis.translation,
       note: '',
       context: '',
+      glossary: analysis.glossary || [],
       url: location.href,
       title: document.title,
       createdAt: new Date().toISOString(),
