@@ -214,7 +214,8 @@
 }
 
 .rfc-sidebar.is-collapsed {
-  transform: translateX(calc(100% - 42px));
+  transform: translateX(100%);
+  pointer-events: none;
 }
 
 .rfc-sidebar-handle {
