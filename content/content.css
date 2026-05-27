@@ -1262,3 +1262,11 @@ body.rfc-inspect-cursor * {
   height: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+
+#rfc-sidebar-panel .rfc-sidebar-list {
+  position: relative;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  touch-action: pan-y;
+}

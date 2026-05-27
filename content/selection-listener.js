@@ -270,6 +270,13 @@
     window.ReadingFlowSidebar.clearSelectionDraft();
   }
 
+
+  function clearLiveSelection() {
+    try {
+      window.getSelection()?.removeAllRanges();
+    } catch {}
+  }
+
   function openQuickMemoPopover(rect, text, translation = '번역 불러오는 중...') {
     quickMemoSelection = { text, rect, translation };
     window.ReadingFlowRenderer.renderSelectionPopover(rect, { sourceText: text, translation });
@@ -359,7 +366,10 @@
     const selectedText = getSelectionText();
     const rect = getSelectionRect();
     if (!inspectMode && selectedText && rect && rect.width && rect.height && isEnglishDominant(selectedText)) {
+      currentSelection = { text: selectedText, rect };
       showSelectionDraftInSidebar(selectedText);
+      window.ReadingFlowRenderer.clearToolbar();
+      setTimeout(clearLiveSelection, 10);
     }
   }, 20));
 

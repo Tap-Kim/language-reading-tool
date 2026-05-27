@@ -41,8 +41,12 @@
     if (!node || node.dataset.rfcScrollBound === 'true') return;
     node.dataset.rfcScrollBound = 'true';
     node.addEventListener('wheel', (event) => {
+      const canScroll = node.scrollHeight > node.clientHeight + 2;
+      if (!canScroll) return;
+      event.preventDefault();
       event.stopPropagation();
-    }, { passive: true });
+      node.scrollTop += event.deltaY;
+    }, { passive: false });
   }
 
   function iconChevronUp() {
@@ -92,7 +96,6 @@
     `;
 
     document.documentElement.appendChild(panel);
-    bindScrollable(panel.querySelector('.rfc-sidebar-shell'));
     bindScrollable(panel.querySelector('.rfc-selection-draft'));
     bindScrollable(panel.querySelector('.rfc-analysis-panel'));
     bindScrollable(panel.querySelector('.rfc-sidebar-list'));
