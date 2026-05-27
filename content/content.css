@@ -1236,3 +1236,29 @@ body.rfc-inspect-cursor * {
   color: white;
   border-color: transparent;
 }
+
+
+#rfc-sidebar-panel .rfc-sidebar-shell {
+  min-height: 0;
+}
+
+#rfc-sidebar-panel .rfc-selection-draft,
+#rfc-sidebar-panel .rfc-analysis-panel,
+#rfc-sidebar-panel .rfc-sidebar-controls,
+#rfc-sidebar-panel .rfc-sidebar-list {
+  min-height: 0;
+}
+
+#rfc-sidebar-panel .rfc-selection-draft {
+  flex: 0 1 34vh;
+}
+
+#rfc-sidebar-panel .rfc-analysis-panel {
+  flex: 0 1 44vh;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-list {
+  flex: 1 1 0%;
+  height: auto;
+  -webkit-overflow-scrolling: touch;
+}
