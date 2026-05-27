@@ -3,6 +3,7 @@
   let inspectMode = false;
   let lastAnalysisSource = 'selection';
   let activeHtmlTarget = null;
+  let hoveredHtmlTarget = null;
 
   function isEnglishDominant(text) {
     const letters = (text.match(/[A-Za-z]/g) || []).length;
@@ -21,6 +22,29 @@
 
   function isIgnoredElement(node) {
     return !!node.closest('#rfc-root, #rfc-sidebar-panel, input, textarea, select, button, code, pre');
+  }
+
+  function getInspectableTarget(node) {
+    if (!(node instanceof HTMLElement)) return null;
+    const candidate = node.closest('p, li, blockquote, article, section, div, h1, h2, h3');
+    if (!candidate || isIgnoredElement(candidate)) return null;
+    const text = (candidate.innerText || candidate.textContent || '').trim();
+    if (!text || text.length < 20 || !isEnglishDominant(text)) return null;
+    const rect = candidate.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    return candidate;
+  }
+
+  function setHoverTarget(target) {
+    if (hoveredHtmlTarget === target) return;
+    clearHoverTarget();
+    hoveredHtmlTarget = target;
+    if (hoveredHtmlTarget) hoveredHtmlTarget.classList.add('rfc-inspect-highlight');
+  }
+
+  function clearHoverTarget() {
+    if (hoveredHtmlTarget) hoveredHtmlTarget.classList.remove('rfc-inspect-highlight');
+    hoveredHtmlTarget = null;
   }
 
   async function requestTranslation(text) {
@@ -87,24 +111,28 @@
 
   function enterInspectMode() {
     inspectMode = true;
+    clearHoverTarget();
+    document.body.classList.add('rfc-inspect-cursor');
     window.ReadingFlowRenderer.renderInspectorHint();
     window.ReadingFlowRenderer.clearToolbar();
   }
 
   function exitInspectMode() {
     inspectMode = false;
+    document.body.classList.remove('rfc-inspect-cursor');
+    clearHoverTarget();
     window.ReadingFlowRenderer.clearInspectorHint();
   }
 
   function activateHtmlTarget(target) {
-    if (!target || isIgnoredElement(target)) return;
-    const text = (target.innerText || target.textContent || '').trim();
-    if (!text || text.length < 20 || !isEnglishDominant(text)) return;
-    const rect = target.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    activeHtmlTarget = target;
+    const inspectable = getInspectableTarget(target);
+    if (!inspectable) return;
+    const text = (inspectable.innerText || inspectable.textContent || '').trim();
+    const rect = inspectable.getBoundingClientRect();
+    activeHtmlTarget = inspectable;
     lastAnalysisSource = 'html';
     currentSelection = { text, rect };
+    inspectable.classList.remove('rfc-inspect-highlight');
     showAnalysis('flow');
     exitInspectMode();
   }
@@ -144,13 +172,19 @@
 
   document.addEventListener('mouseup', () => setTimeout(handleSelection, 10));
 
+  document.addEventListener('mousemove', (event) => {
+    if (!inspectMode) return;
+    const target = getInspectableTarget(event.target);
+    setHoverTarget(target);
+  }, true);
+
   document.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (inspectMode) {
       event.preventDefault();
       event.stopPropagation();
-      activateHtmlTarget(target.closest('p, li, blockquote, article, section, div, h1, h2, h3') || target);
+      activateHtmlTarget(target);
     }
   }, true);
 
@@ -168,7 +202,10 @@
     const mode = event.detail?.mode || 'flow';
     if (!currentSelection?.text) return;
     if (event.detail?.source === 'html' && activeHtmlTarget) {
-      currentSelection = { text: (activeHtmlTarget.innerText || activeHtmlTarget.textContent || '').trim(), rect: activeHtmlTarget.getBoundingClientRect() };
+      currentSelection = {
+        text: (activeHtmlTarget.innerText || activeHtmlTarget.textContent || '').trim(),
+        rect: activeHtmlTarget.getBoundingClientRect()
+      };
     }
     showAnalysis(mode);
   });

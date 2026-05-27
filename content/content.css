@@ -405,3 +405,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+body.rfc-inspect-cursor,
+body.rfc-inspect-cursor * {
+  cursor: crosshair !important;
+}
+
+.rfc-inspect-highlight {
+  outline: 3px solid #2563eb !important;
+  outline-offset: 3px !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+}
+
