@@ -6,7 +6,12 @@
 
   const uiState = {
     query: '',
-    type: 'all'
+    type: 'all',
+    sections: {
+      selection: false,
+      analysis: false,
+      memo: false
+    }
   };
 
   const MODE_LABELS = {
@@ -16,6 +21,14 @@
     simplify: '간소화 보기',
     compare: '원문 비교'
   };
+
+  function iconChevronUp() {
+    return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 12l5-5 5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  function iconChevronDown() {
+    return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
 
   async function getItems() {
     const data = await chrome.storage.local.get(STORAGE_KEY);
@@ -37,30 +50,51 @@
     await chrome.storage.local.set({ [UI_KEY]: next });
   }
 
-  function bindScrollable(node) {
-    if (!node || node.dataset.rfcScrollBound === 'true') return;
-    node.dataset.rfcScrollBound = 'true';
-
-    const consumeWheel = (event) => {
-      const canScroll = node.scrollHeight > node.clientHeight + 2;
-      if (!canScroll) return;
+  function consumeScroll(node) {
+    return (event) => {
+      if (!node || node.scrollHeight <= node.clientHeight + 2) return;
       event.preventDefault();
       event.stopPropagation();
       if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
       node.scrollTop += event.deltaY;
     };
-
-    node.addEventListener('wheel', consumeWheel, { passive: false, capture: true });
-    node.addEventListener('mousewheel', consumeWheel, { passive: false, capture: true });
-    node.addEventListener('DOMMouseScroll', consumeWheel, { passive: false, capture: true });
   }
 
-  function iconChevronUp() {
-    return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 12l5-5 5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function bindScrollable(node) {
+    if (!node || node.dataset.rfcScrollBound === 'true') return;
+    node.dataset.rfcScrollBound = 'true';
+    const handler = consumeScroll(node);
+    node.addEventListener('wheel', handler, { passive: false, capture: true });
+    node.addEventListener('mousewheel', handler, { passive: false, capture: true });
+    node.addEventListener('DOMMouseScroll', handler, { passive: false, capture: true });
   }
 
-  function iconChevronDown() {
-    return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function escapeHtml(value) {
+    return String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function syncFloatingButton(panel) {
+    window.ReadingFlowRenderer?.setFloatingEntryVisibility(panel.classList.contains('is-collapsed'));
+  }
+
+  async function setPanelCollapsed(panel, collapsed) {
+    panel.classList.toggle('is-collapsed', collapsed);
+    await saveUiState({ collapsed });
+    syncFloatingButton(panel);
+  }
+
+  function sectionHeader(title, key, extra = '') {
+    return `
+      <button type="button" class="rfc-section-toggle" data-role="toggle-section" data-section="${key}" aria-expanded="${uiState.sections[key] ? 'false' : 'true'}">
+        <span>${title}</span>
+        <span class="rfc-section-toggle-icons">${extra}<span class="rfc-icon-inline">${uiState.sections[key] ? iconChevronDown() : iconChevronUp()}</span></span>
+      </button>
+    `;
   }
 
   function ensurePanel() {
@@ -81,46 +115,100 @@
             <p class="rfc-sidebar-subtitle">단어와 문장 해석을 저장하고 다시 봅니다.</p>
           </div>
           <div class="rfc-sidebar-actions">
-            <button type="button" class="rfc-icon-button" data-role="collapse-all" aria-label="모두 접기" title="모두 접기">${iconChevronUp()}</button>
-            <button type="button" class="rfc-icon-button" data-role="expand-all" aria-label="모두 펼치기" title="모두 펼치기">${iconChevronDown()}</button>
+            <button type="button" class="rfc-header-action" data-role="enter-inspect-mode">영역 분석</button>
+            <button type="button" class="rfc-icon-button" data-role="collapse-all" aria-label="모든 메모 접기" title="모든 메모 접기">${iconChevronUp()}</button>
+            <button type="button" class="rfc-icon-button" data-role="expand-all" aria-label="모든 메모 펼치기" title="모든 메모 펼치기">${iconChevronDown()}</button>
           </div>
         </header>
-        <section class="rfc-selection-draft is-hidden" data-role="selection-draft"></section>
-        <section class="rfc-analysis-panel" data-role="analysis-panel">
-          <div class="rfc-analysis-empty">선택한 영역의 교정 결과가 여기에 표시됩니다.</div>
-        </section>
-        <div class="rfc-sidebar-controls">
-          <input type="search" class="rfc-search" data-role="search" placeholder="단어, 문장, 메모 검색" />
-          <div class="rfc-filter-group">
-            <button type="button" data-role="filter" data-type="all" class="is-active">전체</button>
-            <button type="button" data-role="filter" data-type="word">단어</button>
-            <button type="button" data-role="filter" data-type="sentence">문장</button>
-          </div>
+        <div class="rfc-sidebar-body" data-role="sidebar-body">
+          <section class="rfc-section rfc-section-selection is-hidden" data-section-root="selection">
+            ${sectionHeader('드래그 선택', 'selection')}
+            <div class="rfc-section-content"><div class="rfc-selection-draft" data-role="selection-draft"></div></div>
+          </section>
+          <section class="rfc-section rfc-section-analysis" data-section-root="analysis">
+            ${sectionHeader('선택 영역 분석', 'analysis')}
+            <div class="rfc-section-content"><div class="rfc-analysis-panel" data-role="analysis-panel"><div class="rfc-analysis-empty">선택한 영역의 교정 결과가 여기에 표시됩니다.</div></div></div>
+          </section>
+          <section class="rfc-section rfc-section-memo" data-section-root="memo">
+            ${sectionHeader('메모 보관함', 'memo')}
+            <div class="rfc-section-content">
+              <div class="rfc-memo-controls-wrap">
+                <div class="rfc-sidebar-controls">
+                  <input type="search" class="rfc-search" data-role="search" placeholder="단어, 문장, 메모 검색" />
+                  <div class="rfc-filter-group">
+                    <button type="button" data-role="filter" data-type="all" class="is-active">전체</button>
+                    <button type="button" data-role="filter" data-type="word">단어</button>
+                    <button type="button" data-role="filter" data-type="sentence">문장</button>
+                  </div>
+                </div>
+              </div>
+              <div class="rfc-sidebar-list"></div>
+            </div>
+          </section>
         </div>
-        <div class="rfc-sidebar-list"></div>
       </div>
     `;
 
     document.documentElement.appendChild(panel);
-    bindScrollable(panel.querySelector('.rfc-selection-draft'));
-    bindScrollable(panel.querySelector('.rfc-analysis-panel'));
-    bindScrollable(panel.querySelector('.rfc-sidebar-list'));
+    bindScrollable(panel.querySelector('[data-role="sidebar-body"]'));
 
-    panel.querySelector('[data-role="toggle-sidebar"]').addEventListener('click', async () => {
-      panel.classList.toggle('is-collapsed');
-      await saveUiState({ collapsed: panel.classList.contains('is-collapsed') });
-    });
+    panel.addEventListener('click', async (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
 
-    panel.querySelector('[data-role="collapse-all"]').addEventListener('click', async () => {
-      const items = (await getItems()).map(item => ({ ...item, folded: true }));
-      await saveItems(items);
-      renderItems(items);
-    });
+      if (button.dataset.role === 'toggle-sidebar') {
+        await setPanelCollapsed(panel, !panel.classList.contains('is-collapsed'));
+        return;
+      }
 
-    panel.querySelector('[data-role="expand-all"]').addEventListener('click', async () => {
-      const items = (await getItems()).map(item => ({ ...item, folded: false }));
-      await saveItems(items);
-      renderItems(items);
+      if (button.dataset.role === 'enter-inspect-mode') {
+        window.dispatchEvent(new CustomEvent('rfc:enter-inspect-mode'));
+        return;
+      }
+
+      if (button.dataset.role === 'collapse-all') {
+        const items = (await getItems()).map(item => ({ ...item, folded: true }));
+        await saveItems(items);
+        renderItems(items);
+        return;
+      }
+
+      if (button.dataset.role === 'expand-all') {
+        const items = (await getItems()).map(item => ({ ...item, folded: false }));
+        await saveItems(items);
+        renderItems(items);
+        return;
+      }
+
+      if (button.dataset.role === 'toggle-section') {
+        const key = button.dataset.section;
+        uiState.sections[key] = !uiState.sections[key];
+        await saveUiState({ sections: uiState.sections });
+        applySectionState();
+        return;
+      }
+
+      if (button.dataset.role === 'analysis-mode') {
+        window.dispatchEvent(new CustomEvent('rfc:mode-change', {
+          detail: { mode: button.dataset.mode, source: button.dataset.source || 'selection', target: 'sidebar' }
+        }));
+        return;
+      }
+
+      if (button.dataset.role === 'restore-original') {
+        window.dispatchEvent(new CustomEvent('rfc:restore-original-content'));
+        return;
+      }
+
+      if (button.dataset.role === 'save-selection-draft') {
+        const note = panel.querySelector('[data-role="selection-note"]')?.value?.trim() || '';
+        window.dispatchEvent(new CustomEvent('rfc:save-selection-draft', { detail: { note } }));
+        return;
+      }
+
+      if (button.dataset.role === 'dismiss-selection-draft') {
+        window.dispatchEvent(new CustomEvent('rfc:dismiss-selection-draft'));
+      }
     });
 
     panel.querySelector('[data-role="search"]').addEventListener('input', (event) => {
@@ -136,33 +224,20 @@
       });
     });
 
-    panel.querySelector('[data-role="analysis-panel"]').addEventListener('click', (event) => {
-      const button = event.target.closest('button');
-      if (!button) return;
-      if (button.dataset.role === 'analysis-mode') {
-        window.dispatchEvent(new CustomEvent('rfc:mode-change', {
-          detail: { mode: button.dataset.mode, source: button.dataset.source || 'selection', target: 'sidebar' }
-        }));
-      }
-      if (button.dataset.role === 'restore-original') {
-        window.dispatchEvent(new CustomEvent('rfc:restore-original-content'));
-      }
-    });
-
-    panel.querySelector('[data-role="selection-draft"]').addEventListener('click', (event) => {
-      const button = event.target.closest('button');
-      if (!button) return;
-      const box = panel.querySelector('[data-role="selection-draft"]');
-      if (button.dataset.role === 'save-selection-draft') {
-        const note = box.querySelector('[data-role="selection-note"]')?.value?.trim() || '';
-        window.dispatchEvent(new CustomEvent('rfc:save-selection-draft', { detail: { note } }));
-      }
-      if (button.dataset.role === 'dismiss-selection-draft') {
-        window.dispatchEvent(new CustomEvent('rfc:dismiss-selection-draft'));
-      }
-    });
-
+    syncFloatingButton(panel);
     return panel;
+  }
+
+  function applySectionState() {
+    const panel = ensurePanel();
+    panel.querySelectorAll('[data-section-root]').forEach(section => {
+      const key = section.dataset.sectionRoot;
+      section.classList.toggle('is-collapsed', !!uiState.sections[key]);
+      const toggle = section.querySelector('[data-role="toggle-section"]');
+      if (toggle) toggle.setAttribute('aria-expanded', uiState.sections[key] ? 'false' : 'true');
+      const icon = toggle?.querySelector('.rfc-icon-inline');
+      if (icon) icon.innerHTML = uiState.sections[key] ? iconChevronDown() : iconChevronUp();
+    });
   }
 
   async function maybeAutoOpenPanel() {
@@ -189,14 +264,12 @@
 
   function openPanel() {
     const panel = ensurePanel();
-    panel.classList.remove('is-collapsed');
-    saveUiState({ collapsed: false });
+    setPanelCollapsed(panel, false);
   }
 
   function togglePanel() {
     const panel = ensurePanel();
-    panel.classList.toggle('is-collapsed');
-    saveUiState({ collapsed: panel.classList.contains('is-collapsed') });
+    setPanelCollapsed(panel, !panel.classList.contains('is-collapsed'));
   }
 
   async function toggleFold(id) {
@@ -262,7 +335,6 @@
   function renderActiveAnalysis(analysis, meta = {}) {
     const panel = ensurePanel();
     const box = panel.querySelector('[data-role="analysis-panel"]');
-    bindScrollable(box);
     const modes = (analysis?.supportedModes || ['flow', 'chunk', 'structure', 'simplify', 'compare'])
       .map(mode => `<button type="button" class="rfc-analysis-tab ${mode === analysis.mode ? 'is-active' : ''}" data-role="analysis-mode" data-source="${escapeHtml(meta.source || 'selection')}" data-mode="${mode}">${MODE_LABELS[mode]}</button>`)
       .join('');
@@ -297,16 +369,17 @@
     const node = panel.querySelector('[data-role="analysis-translation"]');
     if (node) node.textContent = translation || '';
   }
+
   function renderSelectionDraft(payload = {}) {
     const panel = ensurePanel();
+    const section = panel.querySelector('[data-section-root="selection"]');
     const box = panel.querySelector('[data-role="selection-draft"]');
-    bindScrollable(box);
     if (!payload.sourceText) {
-      box.classList.add('is-hidden');
+      section.classList.add('is-hidden');
       box.innerHTML = '';
       return;
     }
-    box.classList.remove('is-hidden');
+    section.classList.remove('is-hidden');
     box.innerHTML = `
       <div class="rfc-selection-draft-header">
         <div>
@@ -345,11 +418,7 @@
     const filtered = filterItems(items);
 
     if (!filtered.length) {
-      list.innerHTML = `
-        <div class="rfc-empty-state">
-          <p>조건에 맞는 메모가 없습니다.</p>
-        </div>
-      `;
+      list.innerHTML = '<div class="rfc-empty-state"><p>조건에 맞는 메모가 없습니다.</p></div>';
       return;
     }
 
@@ -380,11 +449,9 @@
     list.querySelectorAll('[data-role="toggle-fold"]').forEach(button => {
       button.addEventListener('click', () => toggleFold(button.dataset.id));
     });
-
     list.querySelectorAll('[data-role="remove"]').forEach(button => {
       button.addEventListener('click', () => removeItem(button.dataset.id));
     });
-
     list.querySelectorAll('[data-role="save-edit"]').forEach(button => {
       button.addEventListener('click', async () => {
         const id = button.dataset.id;
@@ -401,19 +468,13 @@
     renderItems(items);
   }
 
-  function escapeHtml(value) {
-    return String(value || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;');
-  }
-
   async function bootstrap() {
     const panel = ensurePanel();
     const ui = await getUiState();
     if (ui.collapsed === false) panel.classList.remove('is-collapsed');
+    uiState.sections = { ...uiState.sections, ...(ui.sections || {}) };
+    syncFloatingButton(panel);
+    applySectionState();
     const items = await getItems();
     renderItems(items);
   }

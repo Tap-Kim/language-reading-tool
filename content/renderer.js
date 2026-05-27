@@ -123,11 +123,17 @@
     return String(value || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
   }
 
+  function setFloatingEntryVisibility(isVisible) {
+    const button = ensureFloatingButton();
+    button.classList.toggle('is-hidden', !isVisible);
+  }
+
   ensureFloatingButton();
 
   window.ReadingFlowRenderer = {
     ensureRoot,
     ensureFloatingButton,
+    setFloatingEntryVisibility,
     renderToolbar,
     clearToolbar,
     clearOverlay,
