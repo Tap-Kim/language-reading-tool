@@ -418,3 +418,125 @@ body.rfc-inspect-cursor * {
   background: rgba(37, 99, 235, 0.08) !important;
 }
 
+
+
+.rfc-analysis-panel {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  background: #ffffff;
+}
+
+.rfc-analysis-empty {
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.rfc-analysis-header p,
+.rfc-analysis-summary,
+.rfc-analysis-source,
+.rfc-analysis-translation p,
+.rfc-analysis-line p,
+.rfc-analysis-simple,
+.rfc-analysis-compare p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.rfc-analysis-header p,
+.rfc-analysis-summary,
+.rfc-analysis-source {
+  color: #64748b;
+}
+
+.rfc-analysis-source {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  max-height: 100px;
+  overflow: auto;
+}
+
+.rfc-analysis-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.rfc-analysis-tab {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  background: #e2e8f0;
+}
+
+.rfc-analysis-tab.is-active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.rfc-analysis-body h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.rfc-analysis-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.rfc-analysis-chip {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #dbeafe;
+  font-size: 12px;
+}
+
+.rfc-analysis-lines {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.rfc-analysis-line,
+.rfc-analysis-simple,
+.rfc-analysis-compare > div,
+.rfc-analysis-translation {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.rfc-analysis-line span {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rfc-analysis-compare {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.rfc-analysis-translation {
+  margin-top: 12px;
+}
+

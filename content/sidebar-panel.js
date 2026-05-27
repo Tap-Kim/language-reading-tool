@@ -9,6 +9,14 @@
     type: 'all'
   };
 
+  const MODE_LABELS = {
+    flow: '흐름 교정',
+    chunk: '의미 덩어리',
+    structure: '구조 강조',
+    simplify: '간소화 보기',
+    compare: '원문 비교'
+  };
+
   async function getItems() {
     const data = await chrome.storage.local.get(STORAGE_KEY);
     return data[STORAGE_KEY] || [];
@@ -51,6 +59,9 @@
             <button type="button" data-role="expand-all">펼치기</button>
           </div>
         </header>
+        <section class="rfc-analysis-panel" data-role="analysis-panel">
+          <div class="rfc-analysis-empty">선택한 영역의 교정 결과가 여기에 표시됩니다.</div>
+        </section>
         <div class="rfc-sidebar-controls">
           <input type="search" class="rfc-search" data-role="search" placeholder="단어, 문장, 메모 검색" />
           <div class="rfc-filter-group">
@@ -173,6 +184,67 @@
     `;
   }
 
+  function renderModeContent(analysis) {
+    const payload = analysis?.modePayload || {};
+    if (payload.contentType === 'lines') {
+      return `<div class="rfc-analysis-lines">${(payload.lines || []).map(line => `<div class="rfc-analysis-line"><span>${escapeHtml(line.label)}</span><p>${escapeHtml(line.text)}</p></div>`).join('')}</div>`;
+    }
+    if (payload.contentType === 'text') {
+      return `<div class="rfc-analysis-simple">${escapeHtml(payload.text || '')}</div>`;
+    }
+    if (payload.contentType === 'compare') {
+      return `
+        <div class="rfc-analysis-compare">
+          <div><strong>원문</strong><p>${escapeHtml(payload.compare?.original || '')}</p></div>
+          <div><strong>교정형</strong><p>${escapeHtml(payload.compare?.corrected || '')}</p></div>
+        </div>
+      `;
+    }
+    return `<div class="rfc-analysis-chips">${(payload.chips || analysis?.chunks || []).map(chunk => `<span class="rfc-analysis-chip">${escapeHtml(chunk)}</span>`).join('')}</div>`;
+  }
+
+  function renderActiveAnalysis(analysis, meta = {}) {
+    const panel = ensurePanel();
+    const box = panel.querySelector('[data-role="analysis-panel"]');
+    const modes = (analysis?.supportedModes || ['flow', 'chunk', 'structure', 'simplify', 'compare'])
+      .map(mode => `<button type="button" class="rfc-analysis-tab ${mode === analysis.mode ? 'is-active' : ''}" data-role="analysis-mode" data-mode="${mode}">${MODE_LABELS[mode]}</button>`)
+      .join('');
+
+    box.innerHTML = `
+      <div class="rfc-analysis-header">
+        <div>
+          <strong>선택 영역 분석</strong>
+          <p>${escapeHtml(meta.label || '클릭한 영역의 교정 결과')}</p>
+        </div>
+      </div>
+      <div class="rfc-analysis-source">${escapeHtml(meta.sourceText || analysis?.sourceText || '')}</div>
+      <div class="rfc-analysis-tabs">${modes}</div>
+      <div class="rfc-analysis-body">
+        <h4>${escapeHtml(analysis?.modePayload?.title || '')}</h4>
+        <p class="rfc-analysis-summary">${escapeHtml(analysis?.modePayload?.summary || '')}</p>
+        ${renderModeContent(analysis)}
+        <div class="rfc-analysis-translation">
+          <strong>번역</strong>
+          <p data-role="analysis-translation">${escapeHtml(analysis?.translation || '')}</p>
+        </div>
+      </div>
+    `;
+
+    box.querySelectorAll('[data-role="analysis-mode"]').forEach(button => {
+      button.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('rfc:mode-change', {
+          detail: { mode: button.dataset.mode, source: meta.source || 'selection', target: 'sidebar' }
+        }));
+      });
+    });
+  }
+
+  function updateActiveTranslation(translation) {
+    const panel = ensurePanel();
+    const node = panel.querySelector('[data-role="analysis-translation"]');
+    if (node) node.textContent = translation || '';
+  }
+
   function renderItems(items) {
     const panel = ensurePanel();
     const list = panel.querySelector('.rfc-sidebar-list');
@@ -261,6 +333,8 @@
     getItems,
     togglePanel,
     openPanel,
-    refresh
+    refresh,
+    renderActiveAnalysis,
+    updateActiveTranslation
   };
 })();

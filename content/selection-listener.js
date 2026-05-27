@@ -81,6 +81,15 @@
     return window.ReadingFlowChunker.analyze(currentSelection.text, mode);
   }
 
+  function renderAnalysisInSidebar(analysis) {
+    window.ReadingFlowSidebar.openPanel();
+    window.ReadingFlowSidebar.renderActiveAnalysis(analysis, {
+      source: lastAnalysisSource,
+      sourceText: currentSelection?.text || analysis?.sourceText || '',
+      label: lastAnalysisSource === 'html' ? '클릭한 HTML 영역의 교정 결과' : '선택한 텍스트의 교정 결과'
+    });
+  }
+
   async function hydrateTranslation(text, apply) {
     const translation = await requestTranslation(text);
     apply(translation);
@@ -88,12 +97,12 @@
 
   function showAnalysis(mode = 'flow') {
     const analysis = analyze(mode);
-    if (!analysis || !currentSelection?.rect) return;
-    window.ReadingFlowRenderer.renderOverlay(currentSelection.rect, analysis, { source: lastAnalysisSource });
-    if ((currentSelection.text || '').split(/\s+/).length > 3) {
+    if (!analysis) return;
+    renderAnalysisInSidebar(analysis);
+    if ((currentSelection?.text || '').split(/\s+/).length > 3) {
       hydrateTranslation(currentSelection.text, (translation) => {
         analysis.translation = translation;
-        window.ReadingFlowRenderer.updateOverlayTranslation(translation);
+        window.ReadingFlowSidebar.updateActiveTranslation(translation);
       });
     }
   }
@@ -106,7 +115,7 @@
     }
     const item = buildMemoItem(currentSelection.text, analysis);
     await window.ReadingFlowSidebar.addMemoItem(item);
-    window.ReadingFlowRenderer.renderOverlay(currentSelection.rect, analysis, { source: lastAnalysisSource });
+    renderAnalysisInSidebar(analysis);
   }
 
   function enterInspectMode() {
