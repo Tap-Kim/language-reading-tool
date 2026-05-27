@@ -1852,3 +1852,21 @@ body.rfc-inspect-cursor * {
   width: 32px;
   height: 32px;
 }
+
+
+#rfc-sidebar-panel .rfc-memo-corner-actions {
+  gap: 4px;
+}
+
+#rfc-sidebar-panel .rfc-memo-save-corner {
+  width: 32px;
+  height: 32px;
+}
+
+#rfc-sidebar-panel .rfc-memo-actions {
+  display: none;
+}
+
+#rfc-sidebar-panel .rfc-memo-summary {
+  padding-right: 112px;
+}

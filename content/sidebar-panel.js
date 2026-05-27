@@ -428,16 +428,13 @@
           <span class="rfc-memo-text">${escapeHtml(item.sourceText)}</span>
         </button>
         <div class="rfc-memo-corner-actions">
-          <button class="rfc-memo-icon-button" data-role="toggle-fold" data-id="${item.id}" type="button" aria-label="${item.folded ? '펼치기' : '접기'}">${item.folded ? iconExpand() : iconFold()}</button>
+          <button class="rfc-memo-icon-button rfc-memo-save-corner" data-role="save-edit" data-id="${item.id}" type="button" aria-label="저장">${iconSave()}</button>
           <button class="rfc-memo-remove" data-role="remove" data-id="${item.id}" type="button" aria-label="메모 삭제">×</button>
         </div>
         <div class="rfc-memo-body">
           <label class="rfc-field-label">해석</label>
           <textarea class="rfc-field-input" data-role="translation" data-id="${item.id}" rows="3">${escapeHtml(item.translation || '')}</textarea>
           ${renderGlossary(item.glossary)}
-          <div class="rfc-memo-actions">
-            <button class="rfc-memo-icon-button" data-role="save-edit" data-id="${item.id}" type="button" aria-label="저장">${iconSave()}</button>
-          </div>
         </div>
       </article>
     `).join('');
