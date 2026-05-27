@@ -12,8 +12,12 @@
   let sidebarDraftSelection = null;
 
   function isEnglishDominant(text) {
-    const letters = (text.match(/[A-Za-z]/g) || []).length;
-    return letters >= Math.max(10, text.length * 0.35);
+    const normalized = String(text || '').trim();
+    const letters = (normalized.match(/[A-Za-z]/g) || []).length;
+    const words = normalized.split(/\s+/).filter(Boolean);
+    if (!normalized) return false;
+    if (words.length <= 3) return letters >= 1;
+    return letters >= Math.max(10, normalized.length * 0.35);
   }
 
   function getSelectionText() {
@@ -348,7 +352,7 @@
 
   function handleSelection() {
     const text = getSelectionText();
-    if (!text || text.length < 3 || !isEnglishDominant(text)) {
+    if (!text || !isEnglishDominant(text)) {
       currentSelection = null;
       window.ReadingFlowRenderer.clearToolbar();
       return;
