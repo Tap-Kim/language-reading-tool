@@ -30,6 +30,10 @@
     return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
 
+  function iconSparkle() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="rfcGem" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5aa6ff"/><stop offset="55%" stop-color="#8b7bff"/><stop offset="100%" stop-color="#8fe1ff"/></linearGradient></defs><path d="M12 2.8l2.05 5.15L19.2 10l-5.15 2.05L12 17.2l-2.05-5.15L4.8 10l5.15-2.05L12 2.8z" fill="url(#rfcGem)"/><circle cx="18.2" cy="5.2" r="1.25" fill="#8b7bff"/><circle cx="6.1" cy="17.9" r="1.15" fill="#5aa6ff"/></svg>';
+  }
+
   async function getItems() {
     const data = await chrome.storage.local.get(STORAGE_KEY);
     return data[STORAGE_KEY] || [];
@@ -115,7 +119,7 @@
             <p class="rfc-sidebar-subtitle">단어와 문장 해석을 저장하고 다시 봅니다.</p>
           </div>
           <div class="rfc-sidebar-actions">
-            <button type="button" class="rfc-header-action" data-role="enter-inspect-mode">영역 분석</button>
+            <button type="button" class="rfc-header-action" data-role="enter-inspect-mode"><span class="rfc-header-action-icon">${iconSparkle()}</span><span>영역 분석</span></button>
           </div>
         </header>
         <div class="rfc-sidebar-body" data-role="sidebar-body">
@@ -369,7 +373,7 @@
           <strong>드래그 선택</strong>
           <p>선택한 단어/문장을 번역하고 메모로 저장할 수 있습니다.</p>
         </div>
-        <button type="button" class="rfc-analysis-restore" data-role="dismiss-selection-draft">닫기</button>
+        <button type="button" class="rfc-selection-close" data-role="dismiss-selection-draft" aria-label="닫기">×</button>
       </div>
       <div class="rfc-selection-draft-source">${escapeHtml(payload.sourceText || '')}</div>
       <div class="rfc-selection-draft-translation">

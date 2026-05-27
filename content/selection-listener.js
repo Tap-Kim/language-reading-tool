@@ -254,6 +254,24 @@
     window.ReadingFlowSidebar.clearSelectionDraft();
   }
 
+  async function saveDraftSelectionToMemo() {
+    if (!sidebarDraftSelection?.text) return;
+    const sourceText = sidebarDraftSelection.text.trim();
+    if (!sourceText) return;
+    const analysis = window.ReadingFlowChunker.analyze(sourceText, 'flow');
+    analysis.translation = sidebarDraftSelection.translation && sidebarDraftSelection.translation !== '번역 불러오는 중...'
+      ? sidebarDraftSelection.translation
+      : await requestTranslation(sourceText);
+    const item = buildMemoItem(sourceText, analysis, '', analysis.translation);
+    await window.ReadingFlowSidebar.addMemoItem(item);
+    currentSelection = { text: sourceText, rect: getSelectionRect() || new DOMRect(24, 24, 320, 20) };
+    lastAnalysisSource = 'selection';
+    renderAnalysisInSidebar(analysis);
+    sidebarDraftSelection = null;
+    window.ReadingFlowSidebar.clearSelectionDraft();
+    window.ReadingFlowRenderer.clearToolbar();
+  }
+
   function showSelectionDraftInSidebar(text, translation = '번역 불러오는 중...') {
     sidebarDraftSelection = { text, translation };
     window.ReadingFlowSidebar.openPanel();
@@ -446,10 +464,7 @@
   });
 
   window.addEventListener('rfc:save-selection-draft', () => {
-    if (!sidebarDraftSelection?.text) return;
-    currentSelection = { text: sidebarDraftSelection.text, rect: getSelectionRect() || new DOMRect(24, 24, 320, 20) };
-    lastAnalysisSource = 'selection';
-    saveSelectionToMemo('');
+    saveDraftSelectionToMemo();
   });
 
   window.addEventListener('rfc:dismiss-selection-draft', () => {
