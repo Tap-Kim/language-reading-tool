@@ -34,6 +34,19 @@
     return '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="rfcGem" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5aa6ff"/><stop offset="55%" stop-color="#8b7bff"/><stop offset="100%" stop-color="#8fe1ff"/></linearGradient></defs><path d="M12 2.8l2.05 5.15L19.2 10l-5.15 2.05L12 17.2l-2.05-5.15L4.8 10l5.15-2.05L12 2.8z" fill="url(#rfcGem)"/><circle cx="18.2" cy="5.2" r="1.25" fill="#8b7bff"/><circle cx="6.1" cy="17.9" r="1.15" fill="#5aa6ff"/></svg>';
   }
 
+
+  function iconSave() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.5v5h7v-5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 16.5h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  }
+
+  function iconFold() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8.5h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 12.5h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10 16.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  }
+
+  function iconExpand() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8.5h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 10v9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 14.5 12 10l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
   async function getItems() {
     const data = await chrome.storage.local.get(STORAGE_KEY);
     return data[STORAGE_KEY] || [];
@@ -407,7 +420,6 @@
 
     list.innerHTML = filtered.map(item => `
       <article class="rfc-memo-card ${item.folded ? 'is-folded' : ''}">
-        <button class="rfc-memo-remove" data-role="remove" data-id="${item.id}" type="button" aria-label="메모 삭제">×</button>
         <button class="rfc-memo-summary" data-role="toggle-fold" data-id="${item.id}" type="button">
           <span class="rfc-memo-topline">
             <span class="rfc-memo-type">${item.type}</span>
@@ -415,13 +427,16 @@
           </span>
           <span class="rfc-memo-text">${escapeHtml(item.sourceText)}</span>
         </button>
+        <div class="rfc-memo-corner-actions">
+          <button class="rfc-memo-icon-button" data-role="toggle-fold" data-id="${item.id}" type="button" aria-label="${item.folded ? '펼치기' : '접기'}">${item.folded ? iconExpand() : iconFold()}</button>
+          <button class="rfc-memo-remove" data-role="remove" data-id="${item.id}" type="button" aria-label="메모 삭제">×</button>
+        </div>
         <div class="rfc-memo-body">
           <label class="rfc-field-label">해석</label>
           <textarea class="rfc-field-input" data-role="translation" data-id="${item.id}" rows="3">${escapeHtml(item.translation || '')}</textarea>
           ${renderGlossary(item.glossary)}
           <div class="rfc-memo-actions">
-            <button data-role="save-edit" data-id="${item.id}" type="button">저장</button>
-            <button data-role="toggle-fold" data-id="${item.id}" type="button">${item.folded ? '펼치기' : '접기'}</button>
+            <button class="rfc-memo-icon-button" data-role="save-edit" data-id="${item.id}" type="button" aria-label="저장">${iconSave()}</button>
           </div>
         </div>
       </article>

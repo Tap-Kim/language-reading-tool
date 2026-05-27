@@ -1766,3 +1766,66 @@ body.rfc-inspect-cursor * {
 #rfc-root .rfc-floating-menu {
   margin-bottom: 0;
 }
+
+
+#rfc-sidebar-panel .rfc-memo-corner-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 2;
+}
+
+#rfc-sidebar-panel .rfc-memo-remove,
+#rfc-sidebar-panel .rfc-memo-icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rfc-text-muted);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+#rfc-sidebar-panel .rfc-memo-remove {
+  font-size: 20px;
+  line-height: 1;
+  opacity: 0.88;
+}
+
+#rfc-sidebar-panel .rfc-memo-remove:hover,
+#rfc-sidebar-panel .rfc-memo-icon-button:hover,
+#rfc-sidebar-panel .rfc-memo-remove:focus-visible,
+#rfc-sidebar-panel .rfc-memo-icon-button:focus-visible {
+  background: var(--rfc-surface-2);
+  border-color: var(--rfc-border);
+  color: var(--rfc-text);
+}
+
+#rfc-sidebar-panel .rfc-memo-icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+#rfc-sidebar-panel .rfc-memo-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+
+#rfc-sidebar-panel .rfc-memo-actions button {
+  min-width: 0;
+}
+
+#rfc-sidebar-panel .rfc-memo-summary {
+  padding-right: 76px;
+}
+
+#rfc-sidebar-panel .rfc-memo-remove:hover { background: var(--rfc-surface-2); color: var(--rfc-text); border-color: var(--rfc-border); }
