@@ -1655,3 +1655,100 @@ body.rfc-inspect-cursor * {
 #rfc-sidebar-panel .rfc-memo-actions {
   margin-top: 12px;
 }
+
+
+#rfc-root .rfc-floating-wrap {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2147483646;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+#rfc-root .rfc-floating-wrap.is-hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+#rfc-root .rfc-floating-entry {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#rfc-root .rfc-floating-entry .rfc-header-action-icon,
+#rfc-root .rfc-floating-action .rfc-header-action-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#rfc-root .rfc-floating-entry .rfc-header-action-icon svg,
+#rfc-root .rfc-floating-action .rfc-header-action-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+#rfc-root .rfc-floating-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 136px;
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--rfc-surface);
+  border: 1px solid var(--rfc-border);
+  box-shadow: var(--rfc-shadow);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+#rfc-root .rfc-floating-wrap:hover .rfc-floating-menu,
+#rfc-root .rfc-floating-wrap.is-open .rfc-floating-menu,
+#rfc-root .rfc-floating-wrap:focus-within .rfc-floating-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#rfc-root .rfc-floating-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  border: 1px solid var(--rfc-border);
+  background: var(--rfc-surface-2);
+  color: var(--rfc-text);
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#rfc-root .rfc-floating-action:hover {
+  background: var(--rfc-primary);
+  color: white;
+  border-color: transparent;
+}
+
+#rfc-sidebar-panel .rfc-panel-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 20px;
+}

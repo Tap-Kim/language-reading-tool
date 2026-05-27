@@ -1,6 +1,14 @@
 (() => {
   const ROOT_ID = 'rfc-root';
 
+  function iconSparkle() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="rfcFloatGem" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5aa6ff"/><stop offset="55%" stop-color="#8b7bff"/><stop offset="100%" stop-color="#8fe1ff"/></linearGradient></defs><path d="M12 2.8l2.05 5.15L19.2 10l-5.15 2.05L12 17.2l-2.05-5.15L4.8 10l5.15-2.05L12 2.8z" fill="url(#rfcFloatGem)"/><circle cx="18.2" cy="5.2" r="1.25" fill="#8b7bff"/><circle cx="6.1" cy="17.9" r="1.15" fill="#5aa6ff"/></svg>';
+  }
+
+  function iconPanel() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 5.5v13" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12.5 10.2 15.8 12l-3.3 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
   function ensureRoot() {
     let root = document.getElementById(ROOT_ID);
     if (root) return root;
@@ -12,18 +20,37 @@
 
   function ensureFloatingButton() {
     const root = ensureRoot();
-    let button = root.querySelector('.rfc-floating-entry');
-    if (button) return button;
-    button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'rfc-floating-entry';
-    button.textContent = '영역 분석';
-    button.setAttribute('aria-label', 'Start HTML area analysis');
-    button.addEventListener('click', () => {
+    let wrap = root.querySelector('.rfc-floating-wrap');
+    if (wrap) return wrap;
+    wrap = document.createElement('div');
+    wrap.className = 'rfc-floating-wrap';
+    wrap.innerHTML = `
+      <div class="rfc-floating-menu" role="menu" aria-label="Quick actions">
+        <button type="button" class="rfc-floating-action" data-action="inspect" role="menuitem">
+          <span class="rfc-header-action-icon">${iconSparkle()}</span><span>영역 분석</span>
+        </button>
+        <button type="button" class="rfc-floating-action" data-action="open-panel" role="menuitem">
+          <span class="rfc-header-action-icon">${iconPanel()}</span><span>패널 열기</span>
+        </button>
+      </div>
+      <button type="button" class="rfc-floating-entry" aria-label="Quick tools" title="Quick tools">
+        <span class="rfc-header-action-icon">${iconSparkle()}</span>
+      </button>
+    `;
+    wrap.querySelector('.rfc-floating-entry').addEventListener('click', () => {
+      wrap.classList.toggle('is-open');
+    });
+    wrap.querySelector('[data-action="inspect"]').addEventListener('click', () => {
+      wrap.classList.remove('is-open');
       window.dispatchEvent(new CustomEvent('rfc:enter-inspect-mode'));
     });
-    root.appendChild(button);
-    return button;
+    wrap.querySelector('[data-action="open-panel"]').addEventListener('click', () => {
+      wrap.classList.remove('is-open');
+      window.dispatchEvent(new CustomEvent('rfc:open-sidebar-panel'));
+    });
+    wrap.addEventListener('mouseleave', () => wrap.classList.remove('is-open'));
+    root.appendChild(wrap);
+    return wrap;
   }
 
   function clearToolbar() {
@@ -124,8 +151,9 @@
   }
 
   function setFloatingEntryVisibility(isVisible) {
-    const button = ensureFloatingButton();
-    button.classList.toggle('is-hidden', !isVisible);
+    const wrap = ensureFloatingButton();
+    wrap.classList.toggle('is-hidden', !isVisible);
+    if (!isVisible) wrap.classList.remove('is-open');
   }
 
   ensureFloatingButton();

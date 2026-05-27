@@ -442,6 +442,7 @@
   });
 
   window.addEventListener('rfc:enter-inspect-mode', () => enterInspectMode());
+  window.addEventListener('rfc:open-sidebar-panel', () => window.ReadingFlowSidebar.openPanel());
 
   window.addEventListener('rfc:mode-change', (event) => {
     const mode = event.detail?.mode || 'flow';

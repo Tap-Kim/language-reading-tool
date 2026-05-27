@@ -109,9 +109,6 @@
     panel.id = PANEL_ID;
     panel.className = 'rfc-sidebar is-collapsed';
     panel.innerHTML = `
-      <div class="rfc-sidebar-handle">
-        <button type="button" data-role="toggle-sidebar" aria-label="Toggle memo sidebar">📚</button>
-      </div>
       <div class="rfc-sidebar-shell">
         <header class="rfc-sidebar-header">
           <div>
@@ -120,6 +117,7 @@
           </div>
           <div class="rfc-sidebar-actions">
             <button type="button" class="rfc-header-action" data-role="enter-inspect-mode"><span class="rfc-header-action-icon">${iconSparkle()}</span><span>영역 분석</span></button>
+            <button type="button" class="rfc-selection-close rfc-panel-close" data-role="toggle-sidebar" aria-label="패널 닫기">×</button>
           </div>
         </header>
         <div class="rfc-sidebar-body" data-role="sidebar-body">
