@@ -3,22 +3,45 @@
   "name": "Reading Flow Coach",
   "description": "Improve English article reading flow with chunking, structure hints, and a collapsible memo sidebar.",
   "version": "0.1.0",
-  "permissions": ["activeTab", "storage", "scripting", "contextMenus"],
-  "host_permissions": ["<all_urls>", "https://translate.googleapis.com/*"],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "https://translate.googleapis.com/*"
+  ],
   "background": {
     "service_worker": "background/service-worker.js",
     "type": "module"
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Reading Flow Coach"
+    "default_title": "Reading Flow Coach",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
+    }
   },
   "options_page": "options/options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["core/chunker.js", "content/renderer.js", "content/sidebar-panel.js", "content/selection-listener.js"],
-      "css": ["content/content.css"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "core/chunker.js",
+        "content/renderer.js",
+        "content/sidebar-panel.js",
+        "content/selection-listener.js"
+      ],
+      "css": [
+        "content/content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -35,5 +58,11 @@
       },
       "description": "Save current selection to memo"
     }
+  },
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
   }
 }
