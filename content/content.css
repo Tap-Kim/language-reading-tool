@@ -1879,3 +1879,12 @@ body.rfc-inspect-cursor * {
   right: auto;
   inset: auto;
 }
+
+
+#rfc-sidebar-panel .rfc-memo-corner-actions {
+  gap: 0;
+}
+
+#rfc-sidebar-panel .rfc-memo-summary {
+  padding-right: 60px;
+}

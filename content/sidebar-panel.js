@@ -428,7 +428,6 @@
           <span class="rfc-memo-text">${escapeHtml(item.sourceText)}</span>
         </button>
         <div class="rfc-memo-corner-actions">
-          <button class="rfc-memo-icon-button rfc-memo-save-corner" data-role="save-edit" data-id="${item.id}" type="button" aria-label="저장">${iconSave()}</button>
           <button class="rfc-memo-remove" data-role="remove" data-id="${item.id}" type="button" aria-label="메모 삭제">×</button>
         </div>
         <div class="rfc-memo-body">
