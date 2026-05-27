@@ -302,13 +302,7 @@
   }
 
   function renderGlossary(glossary = []) {
-    if (!glossary.length) return '';
-    return `
-      <div class="rfc-glossary">
-        <strong>핵심 단어</strong>
-        <ul>${glossary.map(item => `<li><span>${escapeHtml(item.term)}</span><em>${escapeHtml(item.meaning || '뜻 메모 필요')}</em></li>`).join('')}</ul>
-      </div>
-    `;
+    return '';
   }
 
   function renderModeContent(analysis) {
