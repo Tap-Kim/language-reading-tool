@@ -540,3 +540,86 @@ body.rfc-inspect-cursor * {
   margin-top: 12px;
 }
 
+
+
+#rfc-sidebar-panel {
+  overscroll-behavior: contain;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-shell,
+#rfc-sidebar-panel .rfc-sidebar-list,
+#rfc-sidebar-panel .rfc-analysis-source {
+  overscroll-behavior: contain;
+}
+
+.rfc-annotated-target {
+  border-radius: 12px;
+}
+
+.rfc-inline-annotation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  line-height: 1.9;
+}
+
+.rfc-inline-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.rfc-inline-core {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.rfc-inline-modifier {
+  background: rgba(14, 165, 233, 0.12);
+}
+
+.rfc-inline-clause {
+  background: rgba(249, 115, 22, 0.12);
+}
+
+.rfc-inline-support {
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.rfc-inline-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rfc-inline-text {
+  font-size: inherit;
+  color: inherit;
+}
+
+.rfc-inline-mode-flow .rfc-inline-segment,
+.rfc-inline-mode-chunk .rfc-inline-segment {
+  padding-block: 4px;
+}
+
+.rfc-inline-mode-structure {
+  display: grid;
+  gap: 8px;
+}
+
+.rfc-inline-mode-structure .rfc-inline-segment {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 10px;
+}
+

@@ -4,6 +4,8 @@
   let lastAnalysisSource = 'selection';
   let activeHtmlTarget = null;
   let hoveredHtmlTarget = null;
+  let annotatedTarget = null;
+  let annotatedOriginalHtml = '';
 
   function isEnglishDominant(text) {
     const letters = (text.match(/[A-Za-z]/g) || []).length;
@@ -90,6 +92,66 @@
     });
   }
 
+  function restoreAnnotatedTarget() {
+    if (annotatedTarget && annotatedTarget.isConnected) {
+      annotatedTarget.innerHTML = annotatedOriginalHtml;
+      annotatedTarget.classList.remove('rfc-annotated-target');
+    }
+    annotatedTarget = null;
+    annotatedOriginalHtml = '';
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function renderInlineAnnotation(analysis) {
+    if (lastAnalysisSource !== 'html' || !activeHtmlTarget || !activeHtmlTarget.isConnected) {
+      restoreAnnotatedTarget();
+      return;
+    }
+
+    if (!['flow', 'chunk', 'structure'].includes(analysis.mode)) {
+      restoreAnnotatedTarget();
+      return;
+    }
+
+    const text = currentSelection?.text || analysis.sourceText || '';
+    if (!text) return;
+
+    if (annotatedTarget !== activeHtmlTarget) {
+      restoreAnnotatedTarget();
+      annotatedTarget = activeHtmlTarget;
+      annotatedOriginalHtml = activeHtmlTarget.innerHTML;
+    }
+
+    const segments = analysis.segments || [];
+    let bodyHtml = '';
+
+    if (analysis.mode === 'structure') {
+      bodyHtml = segments.map(segment => `
+        <span class="rfc-inline-segment rfc-inline-${segment.role || 'support'}">
+          <span class="rfc-inline-label">${escapeHtml(segment.role === 'core' ? 'Core' : segment.role === 'modifier' ? 'Modifier' : segment.role === 'clause' ? 'Clause' : 'Support')}</span>
+          <span class="rfc-inline-text">${escapeHtml(segment.text)}</span>
+        </span>
+      `).join(' ');
+    } else {
+      bodyHtml = (analysis.chunks || []).map((chunk, index) => `
+        <span class="rfc-inline-segment rfc-inline-${segments[index]?.role || 'support'}">
+          <span class="rfc-inline-text">${escapeHtml(chunk)}</span>
+        </span>
+      `).join(' ');
+    }
+
+    activeHtmlTarget.innerHTML = `<span class="rfc-inline-annotation rfc-inline-mode-${analysis.mode}">${bodyHtml}</span>`;
+    activeHtmlTarget.classList.add('rfc-annotated-target');
+  }
+
   async function hydrateTranslation(text, apply) {
     const translation = await requestTranslation(text);
     apply(translation);
@@ -99,6 +161,7 @@
     const analysis = analyze(mode);
     if (!analysis) return;
     renderAnalysisInSidebar(analysis);
+    renderInlineAnnotation(analysis);
     if ((currentSelection?.text || '').split(/\s+/).length > 3) {
       hydrateTranslation(currentSelection.text, (translation) => {
         analysis.translation = translation;
@@ -116,6 +179,7 @@
     const item = buildMemoItem(currentSelection.text, analysis);
     await window.ReadingFlowSidebar.addMemoItem(item);
     renderAnalysisInSidebar(analysis);
+    renderInlineAnnotation(analysis);
   }
 
   function enterInspectMode() {
@@ -202,6 +266,7 @@
       exitInspectMode();
       window.ReadingFlowRenderer.clearOverlay();
       window.ReadingFlowRenderer.clearToolbar();
+      restoreAnnotatedTarget();
     }
   });
 

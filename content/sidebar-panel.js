@@ -37,6 +37,23 @@
     await chrome.storage.local.set({ [UI_KEY]: next });
   }
 
+  function trapWheelScroll(scrollNode) {
+    if (!scrollNode || scrollNode.dataset.rfcWheelBound === 'true') return;
+    scrollNode.dataset.rfcWheelBound = 'true';
+    scrollNode.addEventListener('wheel', (event) => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollNode;
+      const delta = event.deltaY;
+      const canScrollDown = scrollTop + clientHeight < scrollHeight - 1;
+      const canScrollUp = scrollTop > 0;
+      if ((delta > 0 && canScrollDown) || (delta < 0 && canScrollUp)) {
+        event.stopPropagation();
+      } else {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, { passive: false });
+  }
+
   function ensurePanel() {
     let panel = document.getElementById(PANEL_ID);
     if (panel) return panel;
@@ -75,6 +92,8 @@
     `;
 
     document.documentElement.appendChild(panel);
+    trapWheelScroll(panel.querySelector('.rfc-sidebar-shell'));
+    trapWheelScroll(panel.querySelector('.rfc-sidebar-list'));
 
     panel.querySelector('[data-role="toggle-sidebar"]').addEventListener('click', async () => {
       panel.classList.toggle('is-collapsed');
