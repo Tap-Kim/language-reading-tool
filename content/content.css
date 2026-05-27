@@ -1753,3 +1753,16 @@ body.rfc-inspect-cursor * {
   padding: 0;
   font-size: 20px;
 }
+
+
+#rfc-root .rfc-floating-wrap:hover .rfc-floating-entry,
+#rfc-root .rfc-floating-wrap.is-open .rfc-floating-entry,
+#rfc-root .rfc-floating-wrap:focus-within .rfc-floating-entry {
+  opacity: 0;
+  transform: translateY(6px) scale(0.92);
+  pointer-events: none;
+}
+
+#rfc-root .rfc-floating-menu {
+  margin-bottom: 0;
+}
