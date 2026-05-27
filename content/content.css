@@ -1117,3 +1117,49 @@ body.rfc-inspect-cursor * {
   z-index: 2147483647;
   pointer-events: none;
 }
+
+
+.rfc-inline-segment[data-tooltip] {
+  cursor: help;
+}
+
+.rfc-inline-segment[data-tooltip]:has(.rfc-inline-word:hover)::after,
+.rfc-inline-segment[data-tooltip]:has(.rfc-inline-word:hover)::before {
+  content: none !important;
+}
+
+.rfc-inline-word {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rfc-inline-word-hitbox {
+  display: inline-block;
+  padding: 2px 3px;
+  margin: -2px -1px;
+  border-radius: 8px;
+}
+
+.rfc-inline-segment {
+  padding: 8px 12px;
+  border-radius: 16px;
+}
+
+.rfc-inline-mode-flow .rfc-inline-segment,
+.rfc-inline-mode-chunk .rfc-inline-segment,
+.rfc-inline-mode-compare .rfc-inline-segment,
+.rfc-inline-mode-simplify .rfc-inline-segment {
+  min-height: 42px;
+}
+
+.rfc-selection-popover {
+  position: absolute;
+  z-index: 2147483647;
+  width: min(440px, calc(100vw - 32px));
+}
+
+.rfc-selection-popover .rfc-popover-card {
+  border: 1px solid var(--rfc-border);
+  background: var(--rfc-surface);
+}

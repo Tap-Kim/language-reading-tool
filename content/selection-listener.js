@@ -134,7 +134,7 @@
       if (/^\s+$/.test(token)) return token;
       const normalized = token.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '').toLowerCase();
       const tooltip = glossary[normalized] || token;
-      return `<span class="rfc-inline-word" data-tooltip="${escapeHtml(tooltip)}" data-word="${escapeHtml(normalized || token.toLowerCase())}">${escapeHtml(token)}</span>`;
+      return `<span class="rfc-inline-word" data-tooltip="${escapeHtml(tooltip)}" data-word="${escapeHtml(normalized || token.toLowerCase())}"><span class="rfc-inline-word-hitbox">${escapeHtml(token)}</span></span>`;
     }).join('');
   }
 
@@ -333,7 +333,14 @@
     toolbar.onclick = onToolbarClick;
   }
 
-  document.addEventListener('mouseup', () => setTimeout(handleSelection, 10));
+  document.addEventListener('mouseup', () => setTimeout(() => {
+    handleSelection();
+    const selectedText = getSelectionText();
+    const rect = getSelectionRect();
+    if (!inspectMode && selectedText && rect && rect.width && rect.height && isEnglishDominant(selectedText)) {
+      openQuickMemoPopover(rect, selectedText);
+    }
+  }, 20));
 
   document.addEventListener('dblclick', (event) => {
     const target = event.target;
