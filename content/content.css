@@ -1,0 +1,215 @@
+#rfc-root {
+  position: relative;
+  z-index: 2147483646;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.rfc-toolbar {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(20, 24, 28, 0.96);
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+}
+
+.rfc-toolbar button,
+.rfc-sidebar button,
+.rfc-overlay button {
+  border: 0;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.rfc-toolbar button {
+  background: #2f7cf6;
+  color: #fff;
+}
+
+.rfc-overlay {
+  position: absolute;
+  width: min(520px, calc(100vw - 32px));
+}
+
+.rfc-card {
+  background: #ffffff;
+  border: 1px solid rgba(20, 24, 28, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+  color: #111827;
+}
+
+.rfc-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.rfc-close {
+  background: #eef2ff;
+}
+
+.rfc-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rfc-chip {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rfc-chip-core { background: #dbeafe; }
+.rfc-chip-support { background: #e5e7eb; }
+.rfc-chip-modifier { background: #fef3c7; }
+.rfc-chip-clause { background: #fce7f3; }
+
+.rfc-translation,
+.rfc-tips {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.rfc-tips {
+  margin-top: 10px;
+  padding-left: 18px;
+}
+
+.rfc-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100vh;
+  z-index: 2147483645;
+  display: flex;
+  transform: translateX(0);
+  transition: transform 180ms ease;
+}
+
+.rfc-sidebar.is-collapsed {
+  transform: translateX(calc(100% - 42px));
+}
+
+.rfc-sidebar-handle {
+  width: 42px;
+  background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rfc-sidebar-handle button {
+  background: transparent;
+  color: #fff;
+  font-size: 18px;
+}
+
+.rfc-sidebar-shell {
+  flex: 1;
+  background: #f8fafc;
+  border-left: 1px solid rgba(17, 24, 39, 0.08);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -12px 0 32px rgba(15, 23, 42, 0.08);
+}
+
+.rfc-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.rfc-sidebar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.rfc-sidebar-actions button {
+  background: #e2e8f0;
+}
+
+.rfc-sidebar-list {
+  overflow: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rfc-empty-state {
+  padding: 20px;
+  border-radius: 16px;
+  background: #fff;
+  color: #475569;
+  border: 1px dashed #cbd5e1;
+}
+
+.rfc-memo-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  overflow: hidden;
+}
+
+.rfc-memo-summary {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+}
+
+.rfc-memo-type {
+  color: #2563eb;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rfc-memo-text {
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rfc-memo-body {
+  padding: 0 12px 12px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.rfc-memo-card.is-folded .rfc-memo-body {
+  display: none;
+}
+
+.rfc-memo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.rfc-memo-actions button {
+  background: #e2e8f0;
+}
+
+@media (max-width: 900px) {
+  .rfc-sidebar {
+    width: min(92vw, 360px);
+  }
+}

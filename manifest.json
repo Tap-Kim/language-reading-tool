@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Reading Flow Coach",
+  "description": "Improve English article reading flow with chunking, structure hints, and a collapsible memo sidebar.",
+  "version": "0.1.0",
+  "permissions": ["activeTab", "storage", "scripting", "contextMenus"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Reading Flow Coach"
+  },
+  "options_page": "options/options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["core/chunker.js", "content/renderer.js", "content/sidebar-panel.js", "content/selection-listener.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Alt+Shift+B"
+      },
+      "description": "Toggle right sidebar"
+    },
+    "save-selection": {
+      "suggested_key": {
+        "default": "Alt+Shift+M"
+      },
+      "description": "Save current selection to memo"
+    }
+  }
+}
