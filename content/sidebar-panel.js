@@ -423,7 +423,6 @@
         <button class="rfc-memo-summary" data-role="toggle-fold" data-id="${item.id}" type="button">
           <span class="rfc-memo-topline">
             <span class="rfc-memo-type">${item.type}</span>
-            <span class="rfc-memo-count">저장 ${item.saveCount || 1}회</span>
           </span>
           <span class="rfc-memo-text">${escapeHtml(item.sourceText)}</span>
         </button>
