@@ -75,6 +75,7 @@
             <button type="button" class="rfc-icon-button" data-role="expand-all" aria-label="모두 펼치기" title="모두 펼치기">${iconChevronDown()}</button>
           </div>
         </header>
+        <section class="rfc-selection-draft is-hidden" data-role="selection-draft"></section>
         <section class="rfc-analysis-panel" data-role="analysis-panel">
           <div class="rfc-analysis-empty">선택한 영역의 교정 결과가 여기에 표시됩니다.</div>
         </section>
@@ -92,6 +93,7 @@
 
     document.documentElement.appendChild(panel);
     bindScrollable(panel.querySelector('.rfc-sidebar-shell'));
+    bindScrollable(panel.querySelector('.rfc-selection-draft'));
     bindScrollable(panel.querySelector('.rfc-analysis-panel'));
     bindScrollable(panel.querySelector('.rfc-sidebar-list'));
 
@@ -135,6 +137,19 @@
       }
       if (button.dataset.role === 'restore-original') {
         window.dispatchEvent(new CustomEvent('rfc:restore-original-content'));
+      }
+    });
+
+    panel.querySelector('[data-role="selection-draft"]').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      const box = panel.querySelector('[data-role="selection-draft"]');
+      if (button.dataset.role === 'save-selection-draft') {
+        const note = box.querySelector('[data-role="selection-note"]')?.value?.trim() || '';
+        window.dispatchEvent(new CustomEvent('rfc:save-selection-draft', { detail: { note } }));
+      }
+      if (button.dataset.role === 'dismiss-selection-draft') {
+        window.dispatchEvent(new CustomEvent('rfc:dismiss-selection-draft'));
       }
     });
 
@@ -273,6 +288,47 @@
     const node = panel.querySelector('[data-role="analysis-translation"]');
     if (node) node.textContent = translation || '';
   }
+  function renderSelectionDraft(payload = {}) {
+    const panel = ensurePanel();
+    const box = panel.querySelector('[data-role="selection-draft"]');
+    bindScrollable(box);
+    if (!payload.sourceText) {
+      box.classList.add('is-hidden');
+      box.innerHTML = '';
+      return;
+    }
+    box.classList.remove('is-hidden');
+    box.innerHTML = `
+      <div class="rfc-selection-draft-header">
+        <div>
+          <strong>드래그 선택</strong>
+          <p>선택한 단어/문장을 번역하고 메모로 저장할 수 있습니다.</p>
+        </div>
+        <button type="button" class="rfc-analysis-restore" data-role="dismiss-selection-draft">닫기</button>
+      </div>
+      <div class="rfc-selection-draft-source">${escapeHtml(payload.sourceText || '')}</div>
+      <div class="rfc-selection-draft-translation">
+        <strong>번역</strong>
+        <p data-role="selection-translation">${escapeHtml(payload.translation || '번역 불러오는 중...')}</p>
+      </div>
+      <label class="rfc-field-label" for="rfc-selection-note">메모</label>
+      <textarea id="rfc-selection-note" class="rfc-field-input" data-role="selection-note" rows="3" placeholder="이 표현을 어떻게 기억할지 적어보세요.">${escapeHtml(payload.note || '')}</textarea>
+      <div class="rfc-selection-draft-actions">
+        <button type="button" data-role="save-selection-draft">메모 저장</button>
+        <button type="button" data-role="dismiss-selection-draft">저장 안 함</button>
+      </div>
+    `;
+  }
+
+  function updateSelectionDraftTranslation(translation) {
+    const panel = ensurePanel();
+    const node = panel.querySelector('[data-role="selection-translation"]');
+    if (node) node.textContent = translation || '';
+  }
+
+  function clearSelectionDraft() {
+    renderSelectionDraft({});
+  }
 
   function renderItems(items) {
     const panel = ensurePanel();
@@ -364,6 +420,9 @@
     openPanel,
     refresh,
     renderActiveAnalysis,
-    updateActiveTranslation
+    updateActiveTranslation,
+    renderSelectionDraft,
+    updateSelectionDraftTranslation,
+    clearSelectionDraft
   };
 })();

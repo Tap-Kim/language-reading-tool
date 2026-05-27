@@ -1163,3 +1163,76 @@ body.rfc-inspect-cursor * {
   border: 1px solid var(--rfc-border);
   background: var(--rfc-surface);
 }
+
+
+#rfc-sidebar-panel .rfc-selection-draft {
+  flex: 0 0 auto;
+  max-height: 34vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px;
+  background: var(--rfc-bg);
+  border-bottom: 1px solid var(--rfc-border);
+}
+
+#rfc-sidebar-panel .rfc-selection-draft.is-hidden {
+  display: none;
+}
+
+.rfc-selection-draft-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rfc-selection-draft-header p {
+  margin-top: 4px;
+  color: var(--rfc-text-muted);
+  font-size: 13px;
+}
+
+.rfc-selection-draft-source,
+.rfc-selection-draft-translation {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--rfc-border);
+  background: var(--rfc-surface);
+  margin-bottom: 12px;
+}
+
+.rfc-selection-draft-source {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.rfc-selection-draft-translation p {
+  margin-top: 6px;
+  color: var(--rfc-text-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.rfc-selection-draft-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rfc-selection-draft-actions button {
+  border: 1px solid var(--rfc-border);
+  background: var(--rfc-surface-2);
+  color: var(--rfc-text);
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.rfc-selection-draft-actions button:hover {
+  background: var(--rfc-primary);
+  color: white;
+  border-color: transparent;
+}

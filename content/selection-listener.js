@@ -9,6 +9,7 @@
   let htmlSourceText = '';
   let latestAnnotationToken = 0;
   let quickMemoSelection = null;
+  let sidebarDraftSelection = null;
 
   function isEnglishDominant(text) {
     const letters = (text.match(/[A-Za-z]/g) || []).length;
@@ -237,16 +238,36 @@
     }
   }
 
-  async function saveSelectionToMemo() {
+  async function saveSelectionToMemo(note = '') {
     if (!currentSelection?.text) return;
     const analysis = analyze('flow', currentSelection.text);
     if ((currentSelection.text || '').split(/\s+/).length > 3) {
       analysis.translation = await requestTranslation(currentSelection.text);
     }
-    const item = buildMemoItem(currentSelection.text, analysis);
+    const item = buildMemoItem(currentSelection.text, analysis, note, analysis.translation);
     await window.ReadingFlowSidebar.addMemoItem(item);
     renderAnalysisInSidebar(analysis);
     renderInlineAnnotation(analysis);
+    sidebarDraftSelection = null;
+    window.ReadingFlowSidebar.clearSelectionDraft();
+  }
+
+  function showSelectionDraftInSidebar(text, translation = '번역 불러오는 중...') {
+    sidebarDraftSelection = { text, translation };
+    window.ReadingFlowSidebar.openPanel();
+    window.ReadingFlowSidebar.renderSelectionDraft({ sourceText: text, translation });
+    if (translation === '번역 불러오는 중...') {
+      hydrateTranslation(text, (translated) => {
+        if (!sidebarDraftSelection || sidebarDraftSelection.text !== text) return;
+        sidebarDraftSelection.translation = translated;
+        window.ReadingFlowSidebar.updateSelectionDraftTranslation(translated);
+      });
+    }
+  }
+
+  function dismissSelectionDraft() {
+    sidebarDraftSelection = null;
+    window.ReadingFlowSidebar.clearSelectionDraft();
   }
 
   function openQuickMemoPopover(rect, text, translation = '번역 불러오는 중...') {
@@ -338,7 +359,7 @@
     const selectedText = getSelectionText();
     const rect = getSelectionRect();
     if (!inspectMode && selectedText && rect && rect.width && rect.height && isEnglishDominant(selectedText)) {
-      openQuickMemoPopover(rect, selectedText);
+      showSelectionDraftInSidebar(selectedText);
     }
   }, 20));
 
@@ -352,18 +373,16 @@
       const inlineSegment = target.closest('.rfc-inline-segment');
       if (inlineWord) {
         const text = inlineWord.textContent.trim();
-        const rect = inlineWord.getBoundingClientRect();
-        openQuickMemoPopover(rect, text, inlineWord.dataset.tooltip || '번역 불러오는 중...');
+        showSelectionDraftInSidebar(text, inlineWord.dataset.tooltip || '번역 불러오는 중...');
         return;
       }
       if (inlineSegment) {
         const text = (inlineSegment.dataset.segmentText || inlineSegment.textContent || '').trim();
-        const rect = inlineSegment.getBoundingClientRect();
-        openQuickMemoPopover(rect, text, inlineSegment.dataset.tooltip || '번역 불러오는 중...');
+        showSelectionDraftInSidebar(text, inlineSegment.dataset.tooltip || '번역 불러오는 중...');
         return;
       }
       if (selectedText && selectionRect && isEnglishDominant(selectedText)) {
-        openQuickMemoPopover(selectionRect, selectedText);
+        showSelectionDraftInSidebar(selectedText);
       }
     }, 20);
   }, true);
@@ -412,6 +431,17 @@
 
   window.addEventListener('rfc:save-quick-memo', (event) => {
     saveQuickMemo(event.detail || {});
+  });
+
+  window.addEventListener('rfc:save-selection-draft', (event) => {
+    if (!sidebarDraftSelection?.text) return;
+    currentSelection = { text: sidebarDraftSelection.text, rect: getSelectionRect() || new DOMRect(24, 24, 320, 20) };
+    lastAnalysisSource = 'selection';
+    saveSelectionToMemo(event.detail?.note || '');
+  });
+
+  window.addEventListener('rfc:dismiss-selection-draft', () => {
+    dismissSelectionDraft();
   });
 
   chrome.runtime.onMessage.addListener((message) => {
