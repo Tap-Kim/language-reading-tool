@@ -1570,3 +1570,39 @@ body.rfc-inspect-cursor * {
 #rfc-sidebar-panel .rfc-selection-draft-header {
   align-items: center;
 }
+
+
+#rfc-sidebar-panel .rfc-header-action {
+  white-space: nowrap;
+  min-width: 112px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-actions {
+  flex-wrap: nowrap;
+}
+
+#rfc-root .rfc-inspector-hint {
+  color: var(--rfc-text) !important;
+  background: var(--rfc-surface) !important;
+  border: 1px solid var(--rfc-border) !important;
+}
+
+#rfc-root .rfc-inspector-hint strong,
+#rfc-root .rfc-inspector-hint span {
+  color: var(--rfc-text) !important;
+  opacity: 1 !important;
+}
+
+.rfc-inline-segment[data-tooltip]:hover::after,
+.rfc-inline-word[data-tooltip]:hover::after {
+  background: var(--rfc-tooltip-bg) !important;
+  color: var(--rfc-tooltip-text) !important;
+  border: 1px solid color-mix(in srgb, var(--rfc-tooltip-text) 10%, transparent);
+}
+
+.rfc-inline-segment[data-tooltip]:hover::before,
+.rfc-inline-word[data-tooltip]:hover::before {
+  border-color: var(--rfc-tooltip-bg) transparent transparent transparent !important;
+}
