@@ -1870,3 +1870,12 @@ body.rfc-inspect-cursor * {
 #rfc-sidebar-panel .rfc-memo-summary {
   padding-right: 112px;
 }
+
+
+#rfc-sidebar-panel .rfc-memo-corner-actions .rfc-memo-remove,
+#rfc-sidebar-panel .rfc-memo-corner-actions .rfc-memo-icon-button {
+  position: static;
+  top: auto;
+  right: auto;
+  inset: auto;
+}
