@@ -1270,3 +1270,32 @@ body.rfc-inspect-cursor * {
   overflow-x: hidden;
   touch-action: pan-y;
 }
+
+
+#rfc-sidebar-panel,
+#rfc-sidebar-panel * {
+  overscroll-behavior: contain;
+}
+
+#rfc-root {
+  pointer-events: none;
+}
+
+#rfc-root .rfc-floating-entry,
+#rfc-root .rfc-toolbar,
+#rfc-root .rfc-selection-popover,
+#rfc-root .rfc-inspector-hint {
+  pointer-events: auto;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-shell,
+#rfc-sidebar-panel .rfc-selection-draft,
+#rfc-sidebar-panel .rfc-analysis-panel,
+#rfc-sidebar-panel .rfc-sidebar-list {
+  touch-action: pan-y;
+}
+
+#rfc-sidebar-panel .rfc-sidebar-list {
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}

@@ -40,13 +40,19 @@
   function bindScrollable(node) {
     if (!node || node.dataset.rfcScrollBound === 'true') return;
     node.dataset.rfcScrollBound = 'true';
-    node.addEventListener('wheel', (event) => {
+
+    const consumeWheel = (event) => {
       const canScroll = node.scrollHeight > node.clientHeight + 2;
       if (!canScroll) return;
       event.preventDefault();
       event.stopPropagation();
+      if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
       node.scrollTop += event.deltaY;
-    }, { passive: false });
+    };
+
+    node.addEventListener('wheel', consumeWheel, { passive: false, capture: true });
+    node.addEventListener('mousewheel', consumeWheel, { passive: false, capture: true });
+    node.addEventListener('DOMMouseScroll', consumeWheel, { passive: false, capture: true });
   }
 
   function iconChevronUp() {
