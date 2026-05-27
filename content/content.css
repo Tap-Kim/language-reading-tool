@@ -1829,3 +1829,26 @@ body.rfc-inspect-cursor * {
 }
 
 #rfc-sidebar-panel .rfc-memo-remove:hover { background: var(--rfc-surface-2); color: var(--rfc-text); border-color: var(--rfc-border); }
+
+
+#rfc-sidebar-panel .rfc-memo-icon-button {
+  color: var(--rfc-primary);
+  opacity: 1;
+}
+
+#rfc-sidebar-panel .rfc-memo-icon-button:hover,
+#rfc-sidebar-panel .rfc-memo-icon-button:focus-visible {
+  background: color-mix(in srgb, var(--rfc-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--rfc-primary) 24%, transparent);
+  color: var(--rfc-primary);
+}
+
+#rfc-sidebar-panel .rfc-memo-actions .rfc-memo-icon-button {
+  width: 36px;
+  height: 36px;
+}
+
+#rfc-sidebar-panel .rfc-memo-corner-actions .rfc-memo-icon-button {
+  width: 32px;
+  height: 32px;
+}
