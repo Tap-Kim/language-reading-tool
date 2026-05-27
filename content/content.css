@@ -1888,3 +1888,16 @@ body.rfc-inspect-cursor * {
 #rfc-sidebar-panel .rfc-memo-summary {
   padding-right: 60px;
 }
+
+
+.rfc-analysis-chip {
+  border-radius: 12px;
+}
+
+.rfc-analysis-line {
+  border-radius: 14px;
+}
+
+.rfc-inline-segment {
+  border-radius: 10px;
+}
