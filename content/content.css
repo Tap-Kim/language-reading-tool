@@ -1606,3 +1606,52 @@ body.rfc-inspect-cursor * {
 .rfc-inline-word[data-tooltip]:hover::before {
   border-color: var(--rfc-tooltip-bg) transparent transparent transparent !important;
 }
+
+
+#rfc-sidebar-panel .rfc-memo-card {
+  padding: 14px 14px 12px;
+}
+
+#rfc-sidebar-panel .rfc-memo-summary {
+  min-height: 0;
+  padding: 0 44px 0 0;
+}
+
+#rfc-sidebar-panel .rfc-memo-topline {
+  margin-bottom: 8px;
+}
+
+#rfc-sidebar-panel .rfc-memo-text {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+#rfc-sidebar-panel .rfc-memo-body {
+  margin-top: 12px;
+}
+
+#rfc-sidebar-panel .rfc-memo-card.is-folded .rfc-memo-body {
+  display: none;
+}
+
+#rfc-sidebar-panel .rfc-memo-card.is-folded {
+  padding-bottom: 14px;
+}
+
+#rfc-sidebar-panel .rfc-memo-card.is-folded .rfc-memo-summary {
+  padding-bottom: 0;
+}
+
+#rfc-sidebar-panel .rfc-field-input[data-role="translation"] {
+  min-height: 112px;
+  resize: vertical;
+}
+
+#rfc-sidebar-panel .rfc-glossary {
+  margin-top: 12px;
+  padding: 14px 16px;
+}
+
+#rfc-sidebar-panel .rfc-memo-actions {
+  margin-top: 12px;
+}

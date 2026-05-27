@@ -81,7 +81,7 @@
       title: document.title,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      folded: false,
+      folded: true,
       saveCount: 1
     };
   }
