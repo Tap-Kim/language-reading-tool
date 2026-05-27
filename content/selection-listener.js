@@ -74,7 +74,7 @@
       type: wordLike ? 'word' : 'sentence',
       sourceText: normalized,
       translation: translationOverride || analysis.translation,
-      note,
+      note: '',
       context: '',
       glossary: analysis.glossary || [],
       url: location.href,
@@ -245,10 +245,8 @@
   async function saveSelectionToMemo(note = '') {
     if (!currentSelection?.text) return;
     const analysis = analyze('flow', currentSelection.text);
-    if ((currentSelection.text || '').split(/\s+/).length > 3) {
-      analysis.translation = await requestTranslation(currentSelection.text);
-    }
-    const item = buildMemoItem(currentSelection.text, analysis, note, analysis.translation);
+    analysis.translation = await requestTranslation(currentSelection.text);
+    const item = buildMemoItem(currentSelection.text, analysis, '', analysis.translation);
     await window.ReadingFlowSidebar.addMemoItem(item);
     renderAnalysisInSidebar(analysis);
     renderInlineAnnotation(analysis);
@@ -447,11 +445,11 @@
     saveQuickMemo(event.detail || {});
   });
 
-  window.addEventListener('rfc:save-selection-draft', (event) => {
+  window.addEventListener('rfc:save-selection-draft', () => {
     if (!sidebarDraftSelection?.text) return;
     currentSelection = { text: sidebarDraftSelection.text, rect: getSelectionRect() || new DOMRect(24, 24, 320, 20) };
     lastAnalysisSource = 'selection';
-    saveSelectionToMemo(event.detail?.note || '');
+    saveSelectionToMemo('');
   });
 
   window.addEventListener('rfc:dismiss-selection-draft', () => {

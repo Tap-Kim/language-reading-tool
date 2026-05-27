@@ -1472,3 +1472,37 @@ body.rfc-inspect-cursor * {
 #rfc-sidebar-panel .rfc-empty-state {
   background: var(--rfc-surface);
 }
+
+
+#rfc-sidebar-panel .rfc-memo-card {
+  position: relative;
+}
+
+#rfc-sidebar-panel .rfc-memo-remove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rfc-border);
+  border-radius: 999px;
+  background: var(--rfc-surface-2);
+  color: var(--rfc-text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+
+#rfc-sidebar-panel .rfc-memo-remove:hover {
+  background: var(--rfc-primary);
+  color: white;
+  border-color: transparent;
+}
+
+#rfc-sidebar-panel .rfc-memo-summary {
+  padding-right: 52px;
+}

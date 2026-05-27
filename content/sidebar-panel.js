@@ -116,8 +116,6 @@
           </div>
           <div class="rfc-sidebar-actions">
             <button type="button" class="rfc-header-action" data-role="enter-inspect-mode">영역 분석</button>
-            <button type="button" class="rfc-icon-button" data-role="collapse-all" aria-label="모든 메모 접기" title="모든 메모 접기">${iconChevronUp()}</button>
-            <button type="button" class="rfc-icon-button" data-role="expand-all" aria-label="모든 메모 펼치기" title="모든 메모 펼치기">${iconChevronDown()}</button>
           </div>
         </header>
         <div class="rfc-sidebar-body" data-role="sidebar-body">
@@ -166,20 +164,6 @@
         return;
       }
 
-      if (button.dataset.role === 'collapse-all') {
-        const items = (await getItems()).map(item => ({ ...item, folded: true }));
-        await saveItems(items);
-        renderItems(items);
-        return;
-      }
-
-      if (button.dataset.role === 'expand-all') {
-        const items = (await getItems()).map(item => ({ ...item, folded: false }));
-        await saveItems(items);
-        renderItems(items);
-        return;
-      }
-
       if (button.dataset.role === 'toggle-section') {
         const key = button.dataset.section;
         uiState.sections[key] = !uiState.sections[key];
@@ -201,8 +185,7 @@
       }
 
       if (button.dataset.role === 'save-selection-draft') {
-        const note = panel.querySelector('[data-role="selection-note"]')?.value?.trim() || '';
-        window.dispatchEvent(new CustomEvent('rfc:save-selection-draft', { detail: { note } }));
+        window.dispatchEvent(new CustomEvent('rfc:save-selection-draft'));
         return;
       }
 
@@ -393,8 +376,6 @@
         <strong>번역</strong>
         <p data-role="selection-translation">${escapeHtml(payload.translation || '번역 불러오는 중...')}</p>
       </div>
-      <label class="rfc-field-label" for="rfc-selection-note">메모</label>
-      <textarea id="rfc-selection-note" class="rfc-field-input" data-role="selection-note" rows="3" placeholder="이 표현을 어떻게 기억할지 적어보세요.">${escapeHtml(payload.note || '')}</textarea>
       <div class="rfc-selection-draft-actions">
         <button type="button" data-role="save-selection-draft">메모 저장</button>
         <button type="button" data-role="dismiss-selection-draft">저장 안 함</button>
@@ -424,6 +405,7 @@
 
     list.innerHTML = filtered.map(item => `
       <article class="rfc-memo-card ${item.folded ? 'is-folded' : ''}">
+        <button class="rfc-memo-remove" data-role="remove" data-id="${item.id}" type="button" aria-label="메모 삭제">×</button>
         <button class="rfc-memo-summary" data-role="toggle-fold" data-id="${item.id}" type="button">
           <span class="rfc-memo-topline">
             <span class="rfc-memo-type">${item.type}</span>
@@ -434,13 +416,10 @@
         <div class="rfc-memo-body">
           <label class="rfc-field-label">해석</label>
           <textarea class="rfc-field-input" data-role="translation" data-id="${item.id}" rows="3">${escapeHtml(item.translation || '')}</textarea>
-          <label class="rfc-field-label">메모</label>
-          <textarea class="rfc-field-input" data-role="note" data-id="${item.id}" rows="3">${escapeHtml(item.note || '')}</textarea>
           ${renderGlossary(item.glossary)}
           <div class="rfc-memo-actions">
             <button data-role="save-edit" data-id="${item.id}" type="button">저장</button>
             <button data-role="toggle-fold" data-id="${item.id}" type="button">${item.folded ? '펼치기' : '접기'}</button>
-            <button data-role="remove" data-id="${item.id}" type="button">삭제</button>
           </div>
         </div>
       </article>
@@ -457,8 +436,7 @@
         const id = button.dataset.id;
         const card = button.closest('.rfc-memo-card');
         const translation = card.querySelector('[data-role="translation"]').value.trim();
-        const note = card.querySelector('[data-role="note"]').value.trim();
-        await updateItem(id, { translation, note });
+        await updateItem(id, { translation, note: '' });
       });
     });
   }
