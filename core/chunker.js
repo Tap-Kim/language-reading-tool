@@ -16,7 +16,9 @@
     meaning: '의미',
     phrase: '구',
     improve: '개선하다',
-    reading: '읽기'
+    reading: '읽기',
+    compare: '비교하다',
+    simplify: '단순화하다'
   };
 
   function normalizeWhitespace(text) {
@@ -47,9 +49,7 @@
 
   function simpleTranslate(text) {
     const words = normalizeWhitespace(text).split(/\s+/).filter(Boolean);
-    if (words.length <= 3) {
-      return words.map(translateWord).join(', ');
-    }
+    if (words.length <= 3) return words.map(translateWord).join(', ');
     return '문장 해석 초안: 핵심 골격부터 읽고 수식어는 뒤에서 보세요.';
   }
 
@@ -64,6 +64,65 @@
       meaning: translateWord(term),
       partOfSpeech: 'unknown'
     }));
+  }
+
+  function buildStructureLines(segments) {
+    return segments.map((segment, index) => {
+      const role = index === 0 ? 'Core' : segment.role === 'modifier' ? 'Modifier' : segment.role === 'clause' ? 'Clause' : 'Support';
+      return { label: role, text: segment.text };
+    });
+  }
+
+  function buildSimplified(chunks) {
+    return chunks.slice(0, Math.min(2, chunks.length)).join(' / ');
+  }
+
+  function buildComparison(sourceText, chunks) {
+    return {
+      original: sourceText,
+      corrected: chunks.join(' / ')
+    };
+  }
+
+  function buildModePayload(mode, sourceText, chunks, segments) {
+    switch (mode) {
+      case 'chunk':
+        return {
+          title: '의미 덩어리',
+          summary: '문장을 의미 단위로 잘라 읽습니다.',
+          contentType: 'chips',
+          chips: chunks
+        };
+      case 'structure':
+        return {
+          title: '구조 강조',
+          summary: '핵심과 수식을 분리해 골격을 먼저 봅니다.',
+          contentType: 'lines',
+          lines: buildStructureLines(segments)
+        };
+      case 'simplify':
+        return {
+          title: '간소화 보기',
+          summary: '핵심 골격만 먼저 읽도록 축약해 보여줍니다.',
+          contentType: 'text',
+          text: buildSimplified(chunks)
+        };
+      case 'compare':
+        return {
+          title: '원문 비교',
+          summary: '원문과 교정형을 바로 비교합니다.',
+          contentType: 'compare',
+          compare: buildComparison(sourceText, chunks)
+        };
+      case 'flow':
+      default:
+        return {
+          title: '흐름 교정',
+          summary: '문장 핵심부터 순서대로 읽도록 흐름을 가볍게 정리합니다.',
+          contentType: 'chips',
+          chips: chunks
+        };
+    }
   }
 
   window.ReadingFlowChunker = {
@@ -84,6 +143,8 @@
         segments,
         translation: simpleTranslate(sourceText),
         glossary: extractGlossary(sourceText),
+        modePayload: buildModePayload(mode, sourceText, chunks, segments),
+        supportedModes: ['flow', 'chunk', 'structure', 'simplify', 'compare'],
         tips: [
           '첫 chunk에서 문장 핵심을 먼저 잡습니다.',
           'modifier는 한 박자 늦춰 읽어도 의미 이해에 큰 문제가 없습니다.'

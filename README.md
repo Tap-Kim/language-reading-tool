@@ -5,7 +5,8 @@ Chrome extension for improving English article reading flow with quick chunking,
 ## Current features
 
 - Selection-based floating toolbar
-- Flow correction and chunking overlay
+- HTML area click analysis mode
+- Five correction modes: flow, chunk, structure, simplify, compare
 - Save selected words or sentences to a memo list
 - Collapsible right sidebar with search and type filters
 - Editable translation and note fields inside memo cards
@@ -19,8 +20,15 @@ Chrome extension for improving English article reading flow with quick chunking,
 3. Click **Load unpacked**.
 4. Select this project folder.
 
+## Test the HTML click mode
+
+1. Select an English sentence and open the toolbar.
+2. Click **영역 분석**.
+3. Click a paragraph or content block in the page.
+4. Switch between the five correction tabs in the overlay.
+
 ## Next milestones
 
 - Replace placeholder translation with an API adapter
-- Add compare mode for original vs corrected text
 - Add export and sync options for saved memos
+- Improve HTML block targeting on complex sites
