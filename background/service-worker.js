@@ -6,6 +6,14 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+async function translateText(text) {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(text)}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Translation failed: ${response.status}`);
+  const data = await response.json();
+  return (data?.[0] || []).map(part => part?.[0] || '').join(' ').trim();
+}
+
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== 'save-to-reading-flow-memo' || !tab?.id) return;
   await chrome.tabs.sendMessage(tab.id, {
@@ -24,4 +32,12 @@ chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'save-selection') {
     chrome.tabs.sendMessage(tab.id, { type: 'RFC_SAVE_CURRENT_SELECTION' });
   }
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== 'RFC_TRANSLATE_TEXT') return;
+  translateText(message.payload?.text || '')
+    .then(translation => sendResponse({ ok: true, translation }))
+    .catch(error => sendResponse({ ok: false, error: error.message }));
+  return true;
 });

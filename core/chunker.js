@@ -47,12 +47,6 @@
     return MINI_DICT[normalized] || '뜻 메모 필요';
   }
 
-  function simpleTranslate(text) {
-    const words = normalizeWhitespace(text).split(/\s+/).filter(Boolean);
-    if (words.length <= 3) return words.map(translateWord).join(', ');
-    return '문장 해석 초안: 핵심 골격부터 읽고 수식어는 뒤에서 보세요.';
-  }
-
   function extractGlossary(text) {
     const words = normalizeWhitespace(text)
       .split(/[^A-Za-z'-]+/)
@@ -87,41 +81,16 @@
   function buildModePayload(mode, sourceText, chunks, segments) {
     switch (mode) {
       case 'chunk':
-        return {
-          title: '의미 덩어리',
-          summary: '문장을 의미 단위로 잘라 읽습니다.',
-          contentType: 'chips',
-          chips: chunks
-        };
+        return { title: '의미 덩어리', summary: '문장을 의미 단위로 잘라 읽습니다.', contentType: 'chips', chips: chunks };
       case 'structure':
-        return {
-          title: '구조 강조',
-          summary: '핵심과 수식을 분리해 골격을 먼저 봅니다.',
-          contentType: 'lines',
-          lines: buildStructureLines(segments)
-        };
+        return { title: '구조 강조', summary: '핵심과 수식을 분리해 골격을 먼저 봅니다.', contentType: 'lines', lines: buildStructureLines(segments) };
       case 'simplify':
-        return {
-          title: '간소화 보기',
-          summary: '핵심 골격만 먼저 읽도록 축약해 보여줍니다.',
-          contentType: 'text',
-          text: buildSimplified(chunks)
-        };
+        return { title: '간소화 보기', summary: '핵심 골격만 먼저 읽도록 축약해 보여줍니다.', contentType: 'text', text: buildSimplified(chunks) };
       case 'compare':
-        return {
-          title: '원문 비교',
-          summary: '원문과 교정형을 바로 비교합니다.',
-          contentType: 'compare',
-          compare: buildComparison(sourceText, chunks)
-        };
+        return { title: '원문 비교', summary: '원문과 교정형을 바로 비교합니다.', contentType: 'compare', compare: buildComparison(sourceText, chunks) };
       case 'flow':
       default:
-        return {
-          title: '흐름 교정',
-          summary: '문장 핵심부터 순서대로 읽도록 흐름을 가볍게 정리합니다.',
-          contentType: 'chips',
-          chips: chunks
-        };
+        return { title: '흐름 교정', summary: '문장 핵심부터 순서대로 읽도록 흐름을 가볍게 정리합니다.', contentType: 'chips', chips: chunks };
     }
   }
 
@@ -134,21 +103,18 @@
         role: classifySegment(chunk, index),
         priority: index === 0 ? 'high' : index === chunks.length - 1 ? 'low' : 'medium'
       }));
-
+      const wordList = sourceText.split(/\s+/).filter(Boolean);
       return {
         sourceText,
         normalizedText: sourceText,
         mode,
         chunks,
         segments,
-        translation: simpleTranslate(sourceText),
+        translation: wordList.length <= 3 ? wordList.map(translateWord).join(', ') : '번역 불러오는 중...',
         glossary: extractGlossary(sourceText),
         modePayload: buildModePayload(mode, sourceText, chunks, segments),
         supportedModes: ['flow', 'chunk', 'structure', 'simplify', 'compare'],
-        tips: [
-          '첫 chunk에서 문장 핵심을 먼저 잡습니다.',
-          'modifier는 한 박자 늦춰 읽어도 의미 이해에 큰 문제가 없습니다.'
-        ],
+        tips: ['첫 chunk에서 문장 핵심을 먼저 잡습니다.', 'modifier는 한 박자 늦춰 읽어도 의미 이해에 큰 문제가 없습니다.'],
         warnings: sourceText.length > 240 ? ['긴 문장입니다. 핵심절과 부가 설명을 분리해 보세요.'] : []
       };
     }

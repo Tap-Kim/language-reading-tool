@@ -17,6 +17,22 @@
     return root;
   }
 
+  function ensureFloatingButton() {
+    const root = ensureRoot();
+    let button = root.querySelector('.rfc-floating-entry');
+    if (button) return button;
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'rfc-floating-entry';
+    button.textContent = '영역 분석';
+    button.setAttribute('aria-label', 'Start HTML area analysis');
+    button.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('rfc:enter-inspect-mode'));
+    });
+    root.appendChild(button);
+    return button;
+  }
+
   function clearOverlay() {
     const root = ensureRoot();
     const overlay = root.querySelector('.rfc-overlay');
@@ -47,12 +63,7 @@
       return `<div class="rfc-simple">${escapeHtml(payload.text || '')}</div>`;
     }
     if (payload.contentType === 'compare') {
-      return `
-        <div class="rfc-compare-grid">
-          <div><strong>원문</strong><p>${escapeHtml(payload.compare?.original || '')}</p></div>
-          <div><strong>교정형</strong><p>${escapeHtml(payload.compare?.corrected || '')}</p></div>
-        </div>
-      `;
+      return `<div class="rfc-compare-grid"><div><strong>원문</strong><p>${escapeHtml(payload.compare?.original || '')}</p></div><div><strong>교정형</strong><p>${escapeHtml(payload.compare?.corrected || '')}</p></div></div>`;
     }
     return `<div class="rfc-chip-row">${(payload.chips || analysis.chunks || []).map((chunk, idx) => `<span class="rfc-chip rfc-chip-${analysis.segments[idx]?.role || 'support'}">${escapeHtml(chunk)}</span>`).join('')}</div>`;
   }
@@ -88,13 +99,17 @@
     overlay.querySelector('.rfc-close').addEventListener('click', clearOverlay);
     overlay.querySelectorAll('[data-mode]').forEach(button => {
       button.addEventListener('click', () => {
-        window.dispatchEvent(new CustomEvent('rfc:mode-change', {
-          detail: { mode: button.dataset.mode, source: meta.source || 'selection' }
-        }));
+        window.dispatchEvent(new CustomEvent('rfc:mode-change', { detail: { mode: button.dataset.mode, source: meta.source || 'selection' } }));
       });
     });
 
     root.appendChild(overlay);
+  }
+
+  function updateOverlayTranslation(translation) {
+    const root = ensureRoot();
+    const node = root.querySelector('.rfc-overlay .rfc-translation');
+    if (node) node.textContent = translation || '';
   }
 
   function renderToolbar(rect) {
@@ -118,20 +133,19 @@
   }
 
   function escapeHtml(value) {
-    return String(value || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;');
+    return String(value || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
   }
+
+  ensureFloatingButton();
 
   window.ReadingFlowRenderer = {
     ensureRoot,
+    ensureFloatingButton,
     renderToolbar,
     renderOverlay,
     renderInspectorHint,
     clearInspectorHint,
+    updateOverlayTranslation,
     clearOverlay,
     clearToolbar() {
       const root = ensureRoot();

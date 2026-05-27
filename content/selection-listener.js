@@ -23,6 +23,15 @@
     return !!node.closest('#rfc-root, #rfc-sidebar-panel, input, textarea, select, button, code, pre');
   }
 
+  async function requestTranslation(text) {
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'RFC_TRANSLATE_TEXT', payload: { text } });
+      return response?.ok ? response.translation : '번역을 불러오지 못했습니다.';
+    } catch {
+      return '번역을 불러오지 못했습니다.';
+    }
+  }
+
   function buildMemoItem(text, analysis) {
     const normalized = text.trim();
     const wordLike = normalized.split(/\s+/).length <= 3;
@@ -48,15 +57,29 @@
     return window.ReadingFlowChunker.analyze(currentSelection.text, mode);
   }
 
+  async function hydrateTranslation(text, apply) {
+    const translation = await requestTranslation(text);
+    apply(translation);
+  }
+
   function showAnalysis(mode = 'flow') {
     const analysis = analyze(mode);
     if (!analysis || !currentSelection?.rect) return;
     window.ReadingFlowRenderer.renderOverlay(currentSelection.rect, analysis, { source: lastAnalysisSource });
+    if ((currentSelection.text || '').split(/\s+/).length > 3) {
+      hydrateTranslation(currentSelection.text, (translation) => {
+        analysis.translation = translation;
+        window.ReadingFlowRenderer.updateOverlayTranslation(translation);
+      });
+    }
   }
 
   async function saveSelectionToMemo() {
     if (!currentSelection?.text) return;
     const analysis = analyze('flow');
+    if ((currentSelection.text || '').split(/\s+/).length > 3) {
+      analysis.translation = await requestTranslation(currentSelection.text);
+    }
     const item = buildMemoItem(currentSelection.text, analysis);
     await window.ReadingFlowSidebar.addMemoItem(item);
     window.ReadingFlowRenderer.renderOverlay(currentSelection.rect, analysis, { source: lastAnalysisSource });
@@ -111,19 +134,15 @@
       window.ReadingFlowRenderer.clearToolbar();
       return;
     }
-
     const rect = getSelectionRect();
     if (!rect || !rect.width) return;
-
     lastAnalysisSource = 'selection';
     currentSelection = { text, rect };
     const toolbar = window.ReadingFlowRenderer.renderToolbar(rect);
     toolbar.onclick = onToolbarClick;
   }
 
-  document.addEventListener('mouseup', () => {
-    setTimeout(handleSelection, 10);
-  });
+  document.addEventListener('mouseup', () => setTimeout(handleSelection, 10));
 
   document.addEventListener('click', (event) => {
     const target = event.target;
@@ -143,22 +162,20 @@
     }
   });
 
+  window.addEventListener('rfc:enter-inspect-mode', () => enterInspectMode());
+
   window.addEventListener('rfc:mode-change', (event) => {
     const mode = event.detail?.mode || 'flow';
     if (!currentSelection?.text) return;
     if (event.detail?.source === 'html' && activeHtmlTarget) {
-      currentSelection = {
-        text: (activeHtmlTarget.innerText || activeHtmlTarget.textContent || '').trim(),
-        rect: activeHtmlTarget.getBoundingClientRect()
-      };
+      currentSelection = { text: (activeHtmlTarget.innerText || activeHtmlTarget.textContent || '').trim(), rect: activeHtmlTarget.getBoundingClientRect() };
     }
     showAnalysis(mode);
   });
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === 'RFC_TOGGLE_SIDEBAR') {
-      window.ReadingFlowSidebar.togglePanel();
-    }
+    if (message.type === 'RFC_TOGGLE_SIDEBAR') window.ReadingFlowSidebar.togglePanel();
+    if (message.type === 'RFC_ENTER_INSPECT_MODE') enterInspectMode();
     if (message.type === 'RFC_SAVE_CURRENT_SELECTION') {
       handleSelection();
       saveSelectionToMemo();
@@ -173,4 +190,5 @@
   });
 
   window.ReadingFlowSidebar.ensurePanel();
+  window.ReadingFlowRenderer.ensureFloatingButton();
 })();

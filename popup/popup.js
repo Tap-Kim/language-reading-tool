@@ -3,6 +3,11 @@ async function withActiveTab(callback) {
   if (tab?.id) callback(tab.id);
 }
 
+document.getElementById('enterInspectMode').addEventListener('click', async () => {
+  await withActiveTab((tabId) => chrome.tabs.sendMessage(tabId, { type: 'RFC_ENTER_INSPECT_MODE' }));
+  window.close();
+});
+
 document.getElementById('toggleSidebar').addEventListener('click', async () => {
   await withActiveTab((tabId) => chrome.tabs.sendMessage(tabId, { type: 'RFC_TOGGLE_SIDEBAR' }));
   window.close();
