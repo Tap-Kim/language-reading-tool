@@ -1,4 +1,8 @@
 (() => {
+  const EXTENSION_KEY = 'rfcExtensionEnabled';
+  const FLOATING_KEY = 'rfcFloatingButtonEnabled';
+  let extensionEnabled = true;
+  let floatingButtonEnabled = true;
   let currentSelection = null;
   let inspectMode = false;
   let lastAnalysisSource = 'selection';
@@ -10,6 +14,58 @@
   let latestAnnotationToken = 0;
   let quickMemoSelection = null;
   let sidebarDraftSelection = null;
+
+
+  function applyFloatingButtonVisibility() {
+    document.querySelectorAll('.rfc-inspect-fab, [data-role="inspect-fab"]').forEach((node) => {
+      node.style.display = extensionEnabled && floatingButtonEnabled ? '' : 'none';
+    });
+  }
+
+  function hideExtensionUi() {
+    document.getElementById('rfc-root')?.remove();
+    const sidebar = document.getElementById('rfc-sidebar-panel');
+    if (sidebar) sidebar.classList.add('is-hidden');
+    if (hoveredHtmlTarget) hoveredHtmlTarget.classList.remove('rfc-inspect-highlight');
+    hoveredHtmlTarget = null;
+  }
+
+  async function loadRuntimeSettings() {
+    try {
+      const data = await chrome.storage.local.get([EXTENSION_KEY, FLOATING_KEY]);
+      extensionEnabled = data[EXTENSION_KEY] !== false;
+      floatingButtonEnabled = data[FLOATING_KEY] !== false;
+    } catch {
+      extensionEnabled = true;
+      floatingButtonEnabled = true;
+    }
+    if (!extensionEnabled) {
+      inspectMode = false;
+      currentSelection = null;
+      quickMemoSelection = null;
+      sidebarDraftSelection = null;
+      hideExtensionUi();
+    } else {
+      window.ReadingFlowRenderer.ensureFloatingButton();
+      applyFloatingButtonVisibility();
+    }
+  }
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local') return;
+    if (changes[EXTENSION_KEY]) extensionEnabled = changes[EXTENSION_KEY].newValue !== false;
+    if (changes[FLOATING_KEY]) floatingButtonEnabled = changes[FLOATING_KEY].newValue !== false;
+    if (!extensionEnabled) {
+      inspectMode = false;
+      currentSelection = null;
+      quickMemoSelection = null;
+      sidebarDraftSelection = null;
+      hideExtensionUi();
+    } else {
+      window.ReadingFlowRenderer.ensureFloatingButton();
+      applyFloatingButtonVisibility();
+    }
+  });
 
   function isEnglishDominant(text) {
     const normalized = String(text || '').trim();
@@ -58,6 +114,7 @@
   }
 
   async function requestTranslation(text) {
+    if (!extensionEnabled) return '';
     try {
       const response = await chrome.runtime.sendMessage({ type: 'RFC_TRANSLATE_TEXT', payload: { text } });
       return response?.ok ? response.translation : '번역을 불러오지 못했습니다.';
@@ -87,12 +144,14 @@
   }
 
   function analyze(mode = 'flow', textOverride = '') {
+    if (!extensionEnabled) return null;
     const targetText = textOverride || currentSelection?.text;
     if (!targetText) return null;
     return window.ReadingFlowChunker.analyze(targetText, mode);
   }
 
   function renderAnalysisInSidebar(analysis) {
+    if (!extensionEnabled) return;
     window.ReadingFlowSidebar.openPanel();
     window.ReadingFlowSidebar.renderActiveAnalysis(analysis, {
       source: lastAnalysisSource,
@@ -228,6 +287,7 @@
   }
 
   function showAnalysis(mode = 'flow') {
+    if (!extensionEnabled) return;
     const baseText = lastAnalysisSource === 'html' ? (htmlSourceText || currentSelection?.text || '') : (currentSelection?.text || '');
     const analysis = analyze(mode, baseText);
     if (!analysis) return;
@@ -320,6 +380,7 @@
   }
 
   function enterInspectMode() {
+    if (!extensionEnabled) return;
     inspectMode = true;
     clearHoverTarget();
     document.body.classList.add('rfc-inspect-cursor');
@@ -367,6 +428,7 @@
   }
 
   function handleSelection() {
+    if (!extensionEnabled) return;
     const text = getSelectionText();
     if (!text || !isEnglishDominant(text)) {
       currentSelection = null;
@@ -382,6 +444,10 @@
   }
 
   document.addEventListener('mouseup', () => setTimeout(() => {
+  const EXTENSION_KEY = 'rfcExtensionEnabled';
+  const FLOATING_KEY = 'rfcFloatingButtonEnabled';
+  let extensionEnabled = true;
+  let floatingButtonEnabled = true;
     handleSelection();
     const selectedText = getSelectionText();
     const rect = getSelectionRect();
@@ -397,6 +463,10 @@
     const target = event.target;
     if (!(target instanceof HTMLElement) || isIgnoredElement(target)) return;
     setTimeout(() => {
+  const EXTENSION_KEY = 'rfcExtensionEnabled';
+  const FLOATING_KEY = 'rfcFloatingButtonEnabled';
+  let extensionEnabled = true;
+  let floatingButtonEnabled = true;
       const selectedText = getSelectionText();
       const selectionRect = getSelectionRect();
       const inlineWord = target.closest('.rfc-inline-word');
@@ -418,12 +488,17 @@
   }, true);
 
   document.addEventListener('mousemove', (event) => {
+    if (!extensionEnabled || !floatingButtonEnabled) {
+      clearHoverTarget();
+      return;
+    }
     if (!inspectMode) return;
     const target = getInspectableTarget(event.target);
     setHoverTarget(target);
   }, true);
 
   document.addEventListener('click', (event) => {
+    if (!extensionEnabled) return;
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (inspectMode) {
@@ -434,6 +509,7 @@
   }, true);
 
   document.addEventListener('keydown', (event) => {
+    if (!extensionEnabled) return;
     if (event.key === 'Escape') {
       exitInspectMode();
       window.ReadingFlowRenderer.clearOverlay();
@@ -473,6 +549,11 @@
   });
 
   chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === 'RFC_SETTINGS_UPDATED') {
+      loadRuntimeSettings();
+      return;
+    }
+    if (!extensionEnabled) return;
     if (message.type === 'RFC_TOGGLE_SIDEBAR') window.ReadingFlowSidebar.togglePanel();
     if (message.type === 'RFC_ENTER_INSPECT_MODE') enterInspectMode();
     if (message.type === 'RFC_SAVE_CURRENT_SELECTION') {
@@ -490,4 +571,5 @@
 
   window.ReadingFlowSidebar.ensurePanel();
   window.ReadingFlowRenderer.ensureFloatingButton();
+  loadRuntimeSettings();
 })();

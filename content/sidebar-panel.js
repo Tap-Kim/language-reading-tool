@@ -1,4 +1,5 @@
 (() => {
+  const EXTENSION_KEY = 'rfcExtensionEnabled';
   const STORAGE_KEY = 'rfcMemoItems';
   const PANEL_ID = 'rfc-sidebar-panel';
   const UI_KEY = 'rfcSidebarUi';
@@ -260,7 +261,8 @@
     await maybeAutoOpenPanel();
   }
 
-  function openPanel() {
+  async function openPanel() {
+    if (!(await isExtensionEnabled())) return;
     const panel = ensurePanel();
     setPanelCollapsed(panel, false);
   }

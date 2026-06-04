@@ -1,30 +1,28 @@
+* { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  min-width: 340px;
+  font-family: Arial, sans-serif;
+  background: #f6f8fc;
+  color: #172033;
 }
-
-.popup {
-  width: 320px;
-  padding: 16px;
+.popup-shell { padding: 16px; display: grid; gap: 14px; }
+.popup-header { display: flex; gap: 12px; align-items: center; }
+.popup-logo { width: 40px; height: 40px; border-radius: 10px; }
+.popup-header h1 { margin: 0 0 4px; font-size: 18px; }
+.popup-header p { margin: 0; color: #5b6478; font-size: 13px; }
+.toggle-list { display: grid; gap: 10px; }
+.toggle-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  background: #fff; border: 1px solid #d9dfeb; border-radius: 14px; padding: 12px 14px;
 }
-
-h1 { font-size: 18px; margin: 0 0 8px; }
-p { margin: 0 0 12px; font-size: 13px; line-height: 1.5; }
-.panel { display: grid; gap: 8px; margin-bottom: 16px; }
+.toggle-row strong { display: block; font-size: 14px; margin-bottom: 4px; }
+.toggle-row small { display: block; color: #5b6478; line-height: 1.4; }
+.toggle-row input { width: 18px; height: 18px; }
+.action-list { display: grid; gap: 8px; }
 button {
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: #2563eb;
-  color: #fff;
-  cursor: pointer;
+  border: 0; border-radius: 12px; padding: 12px 14px;
+  background: #1b5cff; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
 }
-.hint {
-  background: #fff;
-  border-radius: 12px;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-}
-ul { padding-left: 18px; margin: 8px 0 0; font-size: 12px; }
+button.secondary { background: #e8eefc; color: #173062; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }

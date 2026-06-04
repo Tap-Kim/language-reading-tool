@@ -1,4 +1,9 @@
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
+  const existing = await chrome.storage.local.get(['rfcExtensionEnabled', 'rfcFloatingButtonEnabled']);
+  await chrome.storage.local.set({
+    rfcExtensionEnabled: existing.rfcExtensionEnabled !== false,
+    rfcFloatingButtonEnabled: existing.rfcFloatingButtonEnabled !== false
+  });
   chrome.contextMenus.create({
     id: 'save-to-reading-flow-memo',
     title: 'Save to Reading Flow Coach memo',
